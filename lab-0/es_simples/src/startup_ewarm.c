@@ -300,5 +300,5 @@ IntDefaultHandler(void)
 }
 
 // This empty function disables FPU initialization
-__weak void __iar_init_vfp(void);
-inline void __iar_init_vfp(void){}
+//__weak void __iar_init_vfp(void);
+//inline void __iar_init_vfp(void){}

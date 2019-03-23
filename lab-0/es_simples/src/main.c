@@ -26,6 +26,7 @@ void main(void){
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);          // Habilita GPIO N (LED D1 = PN1, LED D2 = PN0)
   while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));   // Aguarda final da habilitação
   
+  //Teste comentário
   GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);      // LEDs D1 e D2 como saída
   GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, 0);            // LEDs D1 e D2 apagados
   GPIOPadConfigSet(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_12MA, GPIO_PIN_TYPE_STD);

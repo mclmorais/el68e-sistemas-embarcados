@@ -256,6 +256,8 @@ NMISR(void)
     //
     while(1)
     {
+     
+      
     }
 }
 
@@ -296,16 +298,16 @@ IntDefaultHandler(void)
 }
 
 // This function disables FPU initialization and sets up the PSP
-__weak void __iar_init_vfp(void);
-inline void __iar_init_vfp(void){
-  asm("MOV R1, SP");
-  asm("ADD R1, R1, #64"); // assuming stack size 128
-
-  asm("MRS R0, CONTROL");
-  asm("ORR R0, R0, #2");
-  asm("MSR CONTROL, R0");
-  asm("DSB");
-  asm("ISB");
-
-  asm("MOV SP, R1");
-}
+//__weak void __iar_init_vfp(void);
+//inline void __iar_init_vfp(void){
+//  asm("MOV R1, SP");
+//  asm("ADD R1, R1, #64"); // assuming stack size 128
+//
+//  asm("MRS R0, CONTROL");
+//  asm("ORR R0, R0, #2");
+//  asm("MSR CONTROL, R0");
+//  asm("DSB");
+//  asm("ISB");
+//
+//  asm("MOV SP, R1");
+//}

@@ -120819,7 +120819,7 @@
     "location": {
       "column": "9",
       "line": "9",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\main.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\main.c"
     },
     "name": "LED_D1",
     "origin": "project_file",
@@ -120833,7 +120833,7 @@
     "location": {
       "column": "6",
       "line": "11",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\main.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\main.c"
     },
     "name": "SysTick_Handler",
     "origin": "project_file",
@@ -120847,23 +120847,37 @@
     "location": {
       "column": "6",
       "line": "16",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\main.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\main.c"
     },
     "name": "main",
     "origin": "project_file",
     "scope": null
   },
   {
-    "ID": "c:main.c@451@F@main@ui32SysClock",
+    "ID": "c:main.c@455@F@main@ui32SysClock",
     "What": "Variable",
     "defdec": "Def",
     "display": "ui32SysClock",
     "location": {
       "column": "12",
       "line": "17",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\main.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\main.c"
     },
     "name": "ui32SysClock",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:main.c@2255@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "48",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\main.c"
+    },
+    "name": "i",
     "origin": "project_file",
     "scope": null
   },
@@ -132481,7 +132495,7 @@
     "location": {
       "column": "6",
       "line": "42",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "ResetISR",
     "origin": "project_file",
@@ -132495,7 +132509,7 @@
     "location": {
       "column": "13",
       "line": "43",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "NMISR",
     "origin": "project_file",
@@ -132509,7 +132523,7 @@
     "location": {
       "column": "13",
       "line": "44",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "FaultISR",
     "origin": "project_file",
@@ -132523,7 +132537,7 @@
     "location": {
       "column": "13",
       "line": "45",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "IntDefaultHandler",
     "origin": "project_file",
@@ -132537,7 +132551,7 @@
     "location": {
       "column": "13",
       "line": "46",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "SysTick_Handler",
     "origin": "project_file",
@@ -132551,7 +132565,7 @@
     "location": {
       "column": "13",
       "line": "53",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "__iar_program_start",
     "origin": "project_file",
@@ -132565,7 +132579,7 @@
     "location": {
       "column": "17",
       "line": "60",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "pui32Stack",
     "origin": "project_file",
@@ -132579,7 +132593,7 @@
     "location": {
       "column": "9",
       "line": "69",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "members": [
       {
@@ -132590,7 +132604,7 @@
         "location": {
           "column": "12",
           "line": "71",
-          "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+          "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
         },
         "name": "pfnHandler",
         "origin": "project_file",
@@ -132604,7 +132618,7 @@
         "location": {
           "column": "14",
           "line": "72",
-          "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+          "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
         },
         "name": "ui32Ptr",
         "origin": "project_file",
@@ -132623,7 +132637,7 @@
     "location": {
       "column": "1",
       "line": "74",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "uVectorEntry",
     "origin": "project_file",
@@ -132637,7 +132651,7 @@
     "location": {
       "column": "27",
       "line": "82",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "__vector_table",
     "origin": "project_file",
@@ -132651,7 +132665,7 @@
     "location": {
       "column": "1",
       "line": "226",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "ResetISR",
     "origin": "project_file",
@@ -132664,8 +132678,8 @@
     "display": "void NMISR(void)",
     "location": {
       "column": "1",
-      "line": "256",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "line": "252",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "NMISR",
     "origin": "project_file",
@@ -132678,8 +132692,8 @@
     "display": "void FaultISR(void)",
     "location": {
       "column": "1",
-      "line": "274",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "line": "272",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "FaultISR",
     "origin": "project_file",
@@ -132692,10 +132706,38 @@
     "display": "void IntDefaultHandler(void)",
     "location": {
       "column": "1",
-      "line": "292",
-      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_simples\\src\\startup_ewarm.c"
+      "line": "290",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
     },
     "name": "IntDefaultHandler",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:@F@__iar_init_vfp",
+    "What": "Function",
+    "defdec": "Dec",
+    "display": "void __iar_init_vfp(void)",
+    "location": {
+      "column": "13",
+      "line": "301",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
+    },
+    "name": "__iar_init_vfp",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:@F@__iar_init_vfp",
+    "What": "Function",
+    "defdec": "Def",
+    "display": "void __iar_init_vfp(void)",
+    "location": {
+      "column": "13",
+      "line": "302",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-0\\es_user\\src\\startup_ewarm.c"
+    },
+    "name": "__iar_init_vfp",
     "origin": "project_file",
     "scope": null
   },

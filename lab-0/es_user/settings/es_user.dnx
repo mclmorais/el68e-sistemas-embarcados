@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <settings>
     <LMIFTDIDriver>
-        <LMIFTDIserialNo>0F0089E5</LMIFTDIserialNo>
+        <LMIFTDIserialNo>0F00AB74</LMIFTDIserialNo>
         <LMIFTDIfoundProbes />
     </LMIFTDIDriver>
     <DebugChecksum>
-        <Checksum>2565374707</Checksum>
+        <Checksum>2654907960</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -96,10 +96,13 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints>
-        <Count>0</Count>
+        <Bp0>_ "STD_CODE" "{$PROJ_DIR$\src\main.c}.23.3" 1 0 0 0 "" 0 ""</Bp0>
+        <Bp1>_ "STD_CODE" "{$PROJ_DIR$\src\main.c}.51.5" 1 0 0 0 "" 0 ""</Bp1>
+        <Count>2</Count>
     </Breakpoints>
     <Aliases>
-        <Count>0</Count>
+        <A0>_ "C:\embedded-systems\Tiva_IAR8\driverlib\systick.c" "C:\repositories\sistemas-embarcados\lab-0\driverlib\systick.c"</A0>
+        <Count>1</Count>
         <SuppressDialog>0</SuppressDialog>
     </Aliases>
 </settings>
