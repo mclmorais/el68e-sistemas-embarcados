@@ -1,0 +1,329 @@
+###############################################################################
+#
+# IAR ELF Linker V8.32.3.193/W32 for ARM                  28/Mar/2019  18:11:18
+# Copyright 2007-2019 IAR Systems AB.
+#
+#    Output file  =  
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\Exe\display.out
+#    Map file     =  
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\List\display.map
+#    Command line =  
+#        -f C:\Users\Marcelo\AppData\Local\Temp\EW8972.tmp
+#        (C:\repositories\sistemas-embarcados\lab-1\display\Debug\Obj\cfaf128x128x16.o
+#        C:\repositories\sistemas-embarcados\lab-1\driverlib\ewarm\Exe\driverlib.a
+#        C:\repositories\sistemas-embarcados\lab-1\grlib\Debug\Exe\grlib.a
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\Obj\main.o
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\Obj\startup_ewarm.o
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\Obj\system_tm4c1294ncpdt.o
+#        --no_out_extension -o
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\Exe\display.out
+#        --map
+#        C:\repositories\sistemas-embarcados\lab-1\display\Debug\List\display.map
+#        --config C:\repositories\sistemas-embarcados\lab-1\display\display.icf
+#        --semihosting --entry __iar_program_start --vfe --text_out locale)
+#
+###############################################################################
+
+*******************************************************************************
+*** RUNTIME MODEL ATTRIBUTES
+***
+
+CppFlavor       = *
+__SystemLibrary = DLib
+__dlib_version  = 6
+
+
+*******************************************************************************
+*** HEAP SELECTION
+***
+
+The basic heap was selected because some modules are built with
+size limitations (and not runtime checking), and --advanced_heap
+was not specified.
+
+
+*******************************************************************************
+*** PLACEMENT SUMMARY
+***
+
+"A0":  place at 0x0 { ro section .intvec };
+"P1":  place in [from 0x0 to 0xf'ffff] { ro };
+define block CSTACK with size = 32K, alignment = 8 { };
+define block HEAP with size = 64K, alignment = 8 { };
+"P2":  place in [from 0x2000'0000 to 0x2003'ffff] {
+          rw, block CSTACK, block HEAP };
+do not initialize { section .noinit };
+
+  Section          Kind         Address    Size  Object
+  -------          ----         -------    ----  ------
+"A0":                                     0x200
+  .intvec          const            0x0   0x200  startup_ewarm.o [1]
+                                - 0x200   0x200
+
+"P1":                                    0x1c78
+  .text            ro code        0x200   0x72c  cfaf128x128x16.o [1]
+  .text            ro code        0x92c    0xac  ssi.o [3]
+  .text            ro code        0x9d8   0x1d4  gpio.o [3]
+  .text            ro code        0xbac   0x2b4  sysctl.o [3]
+  .text            ro code        0xe60   0x5b2  string.o [4]
+  .text            ro code       0x1412    0x3a  zero_init3.o [5]
+  .rodata          const         0x144c   0x2f8  fontfixed6x8.o [4]
+  .text            ro code       0x1744   0x1b4  main.o [1]
+  .text            ro code       0x18f8    0x84  context.o [4]
+  .text            ro code       0x197c    0x1c  system_tm4c1294ncpdt.o [1]
+  .text            ro code       0x1998    0x28  systick.o [3]
+  .rodata          const         0x19c0   0x1b0  sysctl.o [3]
+  .rodata          const         0x1b70    0xc8  fontfixed6x8.o [4]
+  .rodata          const         0x1c38    0x90  gpio.o [3]
+  .rodata          const         0x1cc8    0x6c  sysctl.o [3]
+  .rodata          const         0x1d34    0x30  sysctl.o [3]
+  .rodata          const         0x1d64    0x28  cfaf128x128x16.o [1]
+  .text            ro code       0x1d8c    0x28  data_init.o [5]
+  .iar.init_table  const         0x1db4    0x10  - Linker created -
+  .text            ro code       0x1dc4    0x1e  cmain.o [5]
+  .text            ro code       0x1de2     0x4  low_level_init.o [2]
+  .text            ro code       0x1de6     0x4  exit.o [2]
+  .rodata          const         0x1dea     0x2  cfaf128x128x16.o [1]
+  .text            ro code       0x1dec     0xa  cexit.o [5]
+  .text            ro code       0x1df8    0x14  exit.o [6]
+  .rodata          const         0x1e0c    0x18  main.o [1]
+  .rodata          const         0x1e24    0x18  main.o [1]
+  .rodata          const         0x1e3c    0x10  context.o [4]
+  .text            ro code       0x1e4c    0x10  startup_ewarm.o [1]
+  .text            ro code       0x1e5c     0xc  cstartup_M.o [5]
+  .rodata          const         0x1e68     0x8  cfaf128x128x16.o [1]
+  .text            ro code       0x1e70     0x8  charmap.o [4]
+  .rodata          const         0x1e78     0x0  zero_init3.o [5]
+                               - 0x1e78  0x1c78
+
+"P2", part 1 of 2:                         0x3c
+  .bss             zero     0x2000'0000    0x2c  main.o [1]
+  .bss             zero     0x2000'002c     0x4  cfaf128x128x16.o [1]
+  .bss             zero     0x2000'0030     0x4  system_tm4c1294ncpdt.o [1]
+  .bss             zero     0x2000'0034     0x4  context.o [4]
+  .bss             zero     0x2000'0038     0x1  cfaf128x128x16.o [1]
+  .bss             zero     0x2000'0039     0x1  main.o [1]
+                          - 0x2000'003a    0x3a
+
+"P2", part 2 of 2:                        0x200
+  .noinit          uninit   0x2000'003c   0x200  startup_ewarm.o [1]
+                          - 0x2000'023c   0x200
+
+Unused ranges:
+
+         From           To      Size
+         ----           --      ----
+       0x1e78     0xf'ffff  0xf'e188
+  0x2000'023c  0x2003'ffff  0x3'fdc4
+
+
+*******************************************************************************
+*** INIT TABLE
+***
+
+          Address      Size
+          -------      ----
+Zero (__iar_zero_init3)
+    1 destination range, total size 0x3a:
+          0x2000'0000  0x3a
+
+
+
+*******************************************************************************
+*** MODULE SUMMARY
+***
+
+    Module                  ro code  ro data  rw data
+    ------                  -------  -------  -------
+command line/config:
+    -------------------------------------------------
+    Total:
+
+C:\repositories\sistemas-embarcados\lab-1\display\Debug\Obj: [1]
+    cfaf128x128x16.o          1 836       50        5
+    main.o                      436       48       45
+    startup_ewarm.o              16      512      512
+    system_tm4c1294ncpdt.o       28                 4
+    -------------------------------------------------
+    Total:                    2 316      610      566
+
+dl7M_tln.a: [2]
+    exit.o                        4
+    low_level_init.o              4
+    -------------------------------------------------
+    Total:                        8
+
+driverlib.a: [3]
+    gpio.o                      468      144
+    ssi.o                       172
+    sysctl.o                    692      588
+    systick.o                    40
+    -------------------------------------------------
+    Total:                    1 372      732
+
+grlib.a: [4]
+    charmap.o                     8
+    context.o                   132       16        4
+    fontfixed6x8.o                       960
+    string.o                  1 458
+    -------------------------------------------------
+    Total:                    1 598      976        4
+
+rt7M_tl.a: [5]
+    cexit.o                      10
+    cmain.o                      30
+    cstartup_M.o                 12
+    data_init.o                  40
+    zero_init3.o                 58
+    -------------------------------------------------
+    Total:                      150
+
+shb_l.a: [6]
+    exit.o                       20
+    -------------------------------------------------
+    Total:                       20
+
+    Gaps                          2
+    Linker created                        16
+-----------------------------------------------------
+    Grand Total:              5 466    2 334      570
+
+
+*******************************************************************************
+*** ENTRY LIST
+***
+
+Entry                       Address   Size  Type      Object
+-----                       -------   ----  ----      ------
+.iar.init_table$$Base        0x1db4          --   Gb  - Linker created -
+.iar.init_table$$Limit       0x1dc4          --   Gb  - Linker created -
+?main                        0x1dc5         Code  Gb  cmain.o [5]
+FaultISR                     0x1e57    0x2  Code  Lc  startup_ewarm.o [1]
+FontGlyphDataGet             0x12c5   0x40  Code  Lc  string.o [4]
+FontWideGlyphDataGet         0x1305   0x64  Code  Lc  string.o [4]
+GPIODirModeSet                0x9d9   0x28  Code  Gb  gpio.o [3]
+GPIOPadConfigSet              0xa01  0x102  Code  Gb  gpio.o [3]
+GPIOPinConfigure              0xb6b   0x36  Code  Gb  gpio.o [3]
+GPIOPinRead                   0xb03    0x8  Code  Gb  gpio.o [3]
+GPIOPinTypeGPIOInput          0xb17   0x14  Code  Gb  gpio.o [3]
+GPIOPinTypeGPIOOutput         0xb2b    0xa  Code  Gb  gpio.o [3]
+GPIOPinTypeSSI                0xb4f   0x14  Code  Gb  gpio.o [3]
+GPIOPinWrite                  0xb0b    0x8  Code  Gb  gpio.o [3]
+GrContextFontSet             0x1409    0xa  Code  Gb  string.o [4]
+GrContextInit                0x18f9   0x76  Code  Gb  context.o [4]
+GrDefaultStringRenderer
+                              0xe7d   0xca  Code  Gb  string.o [4]
+GrFontCodepageGet            0x1393   0x22  Code  Gb  string.o [4]
+GrFontGlyphDataGet           0x1369   0x2a  Code  Gb  string.o [4]
+GrFontGlyphRender             0xf79  0x322  Code  Gb  string.o [4]
+GrFontInfoGet                0x129b   0x2a  Code  Gb  string.o [4]
+GrMapISO8859_1_Unicode       0x1e71    0x8  Code  Gb  charmap.o [4]
+GrStringDraw                  0xe61   0x1c  Code  Gb  string.o [4]
+GrStringNextCharGet           0xf47   0x32  Code  Gb  string.o [4]
+InitSSICom                    0x761   0x6c  Code  Gb  cfaf128x128x16.o [1]
+IntDefaultHandler            0x1e59    0x2  Code  Lc  startup_ewarm.o [1]
+LED_D1                  0x2000'0039    0x1  Data  Gb  main.o [1]
+NMISR                        0x1e55    0x2  Code  Lc  startup_ewarm.o [1]
+Region$$Table$$Base          0x1db4          --   Gb  - Linker created -
+Region$$Table$$Limit         0x1dc4          --   Gb  - Linker created -
+ResetISR                     0x1e4d    0x8  Code  Gb  startup_ewarm.o [1]
+SSIBusy                       0x9b3    0xc  Code  Gb  ssi.o [3]
+SSIClockSourceSet             0x9bf    0x8  Code  Gb  ssi.o [3]
+SSIConfigSetExpClk            0x92d   0x44  Code  Gb  ssi.o [3]
+SSIDataGet                    0x985   0x14  Code  Gb  ssi.o [3]
+SSIDataGetNonBlocking         0x999   0x1a  Code  Gb  ssi.o [3]
+SSIDataPut                    0x97d    0x8  Code  Gb  ssi.o [3]
+SSIEnable                     0x971    0xc  Code  Gb  ssi.o [3]
+SysCtlClockFreqSet            0xc15  0x20a  Code  Gb  sysctl.o [3]
+SysCtlDelay                   0xc0d    0x8  Code  Gb  sysctl.o [3]
+SysCtlPeripheralEnable        0xbef    0x8  Code  Gb  sysctl.o [3]
+SysCtlPeripheralReady         0xbcd    0x8  Code  Gb  sysctl.o [3]
+SysTickEnable                0x1999    0xc  Code  Gb  systick.o [3]
+SysTickIntEnable             0x19a5    0xc  Code  Gb  systick.o [3]
+SysTickPeriodSet             0x19b1    0x8  Code  Gb  systick.o [3]
+SysTick_Handler              0x17bf   0x18  Code  Gb  main.o [1]
+SystemCoreClock         0x2000'0030    0x4  Data  Gb  system_tm4c1294ncpdt.o [1]
+SystemInit                   0x197d   0x10  Code  Gb  system_tm4c1294ncpdt.o [1]
+UpdateContextCharMapping
+                             0x13b5   0x54  Code  Lc  string.o [4]
+_SysCtlMemTimingGet           0xbad   0x20  Code  Lc  sysctl.o [3]
+__cmain                      0x1dc5         Code  Gb  cmain.o [5]
+__exit                       0x1df9   0x14  Code  Gb  exit.o [6]
+__iar_data_init3             0x1d8d   0x28  Code  Gb  data_init.o [5]
+__iar_init_vfp               0x1e5b    0x2  Code  Gb  startup_ewarm.o [1]
+__iar_program_start          0x1e5d         Code  Gb  cstartup_M.o [5]
+__iar_zero_init3             0x1413   0x3a  Code  Gb  zero_init3.o [5]
+__low_level_init             0x1de3    0x4  Code  Gb  low_level_init.o [2]
+__vector_table                  0x0  0x200  Data  Gb  startup_ewarm.o [1]
+_call_main                   0x1dd1         Code  Gb  cmain.o [5]
+_exit                        0x1ded         Code  Gb  cexit.o [5]
+_main                        0x1ddf         Code  Gb  cmain.o [5]
+_orientation            0x2000'0038    0x1  Data  Lc  cfaf128x128x16.o [1]
+blackColor                   0x1dea    0x2  Data  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16Clear           0x755    0xc  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16ClearColor
+                              0x72d   0x28  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16ColorTranslate
+                              0x6bf   0x1a  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16Dot             0x421   0x1c  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16Flush           0x6d9    0x2  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16Init            0x7cd  0x108  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16LineDrawH
+                              0x5ff   0x30  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16LineDrawV
+                              0x62f   0x30  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16LineHor         0x40b   0x16  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16LineVer         0x3ed   0x1e  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16PixelDraw
+                              0x43d   0x12  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16PixelDrawMultiple
+                              0x44f  0x1b0  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16Rect            0x379   0x74  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16RectFill        0x65f   0x60  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16SetOrientation
+                              0x6db   0x52  Code  Gb  cfaf128x128x16.o [1]
+cfaf128x128x16SetWindow
+                              0x2bf   0xba  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16SsiTransfer
+                              0x215   0x28  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16WriteCommand
+                              0x23d   0x32  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16WriteData
+                              0x26f   0x3e  Code  Lc  cfaf128x128x16.o [1]
+cfaf128x128x16WriteRegister
+                              0x2ad   0x12  Code  Lc  cfaf128x128x16.o [1]
+exit                         0x1de7    0x4  Code  Gb  exit.o [2]
+g_pppui32XTALtoVCO           0x19c0  0x1b0  Data  Lc  sysctl.o [3]
+g_psDefaultCodePointMapTable
+                             0x1e3c   0x10  Data  Gb  context.o [4]
+g_psGrLibDefaults       0x2000'0034    0x4  Data  Lc  context.o [4]
+g_pui32GPIOBaseAddrs         0x1c38   0x90  Data  Lc  gpio.o [3]
+g_pui32VCOFrequencies         0xe58    0x8  Data  Lc  sysctl.o [3]
+g_pui32Xtals                 0x1cc8   0x6c  Data  Lc  sysctl.o [3]
+g_pui8FontFixed6x8Data       0x144c  0x2f8  Data  Lc  fontfixed6x8.o [4]
+g_sCfaf128x128x16            0x1d64   0x28  Data  Gb  cfaf128x128x16.o [1]
+g_sFontFixed6x8              0x1b70   0xc8  Data  Gb  fontfixed6x8.o [4]
+g_sXTALtoMEMTIM              0x1d34   0x30  Data  Lc  sysctl.o [3]
+g_ui32SysClock          0x2000'002c    0x4  Data  Lc  cfaf128x128x16.o [1]
+initContext                  0x178d   0x32  Code  Gb  main.o [1]
+initOLED                     0x1745   0x48  Code  Gb  main.o [1]
+main                         0x17d7   0xee  Code  Gb  main.o [1]
+pui32Stack              0x2000'003c  0x200  Data  Lc  startup_ewarm.o [1]
+sContext                0x2000'0000   0x2c  Data  Gb  main.o [1]
+swap_i32                      0x20b    0xa  Code  Lc  cfaf128x128x16.o [1]
+swap_ui16                     0x201    0xa  Code  Lc  cfaf128x128x16.o [1]
+
+
+[1] = C:\repositories\sistemas-embarcados\lab-1\display\Debug\Obj
+[2] = dl7M_tln.a
+[3] = driverlib.a
+[4] = grlib.a
+[5] = rt7M_tl.a
+[6] = shb_l.a
+
+  5 466 bytes of readonly  code memory
+  2 334 bytes of readonly  data memory
+    570 bytes of readwrite data memory
+
+Errors: none
+Warnings: none

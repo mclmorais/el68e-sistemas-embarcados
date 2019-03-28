@@ -6,12 +6,9 @@
 #include "driverlib/gpio.h"
 #include "driverlib/systick.h"
 
-uint8_t LED_D1 = 0;
+#define TIME_BASE_MAX 1000000
 
-void SysTick_Handler(void){
-  GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, LED_D1); // Acende ou apaga LED D1
-  LED_D1 ^= GPIO_PIN_1; // Troca estado do LED D1
-} // SysTick_Handler
+void readGPIO();
 
 void main(void){
   uint32_t ui32SysClock = SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ     |
@@ -20,41 +17,41 @@ void main(void){
                                               SYSCTL_CFG_VCO_480    ),
                                               24000000); // PLL em 24MHz
   
-  SysTickEnable();
-  SysTickPeriodSet(2400000); // f = 5Hz
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);          // Habilita GPIO N (LED D1 = PN1, LED D2 = PN0)
+  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOM));   // Aguarda final da habilitação
   
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);          // Habilita GPIO N (LED D1 = PN1, LED D2 = PN0)
-  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));   // Aguarda final da habilitação
+  // Configura LED 1 (N0) como saída para verificação da base de tempo
+  GPIOPinTypeGPIOOutput(GPIO_PORTM_BASE, GPIO_PIN_6);
   
-  //Teste comentário
-  GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);      // LEDs D1 e D2 como saída
-  GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, 0);            // LEDs D1 e D2 apagados
-  GPIOPadConfigSet(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_12MA, GPIO_PIN_TYPE_STD);
+  // Escreve 0 em N0
+  GPIOPinWrite(GPIO_PORTM_BASE, GPIO_PIN_6, 0);
   
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                          // Habilita GPIO F (LED D3 = PF4, LED D4 = PF0)
-  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF));                   // Aguarda final da habilitação
+  // Configura M0
+  GPIOPadConfigSet(GPIO_PORTM_BASE, GPIO_PIN_6, GPIO_STRENGTH_12MA, GPIO_PIN_TYPE_STD);
   
-  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4);      // LEDs D3 e D4 como saída
-  GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4, 0);            // LEDs D3 e D4 apagados
-  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4, GPIO_STRENGTH_12MA, GPIO_PIN_TYPE_STD);
+  uint32_t timeBaseCounter = 0;
   
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ);                          // Habilita GPIO J (push-button SW1 = PJ0, push-button SW2 = PJ1)
-  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOJ));                   // Aguarda final da habilitação
+  uint32_t frequencyCounter = 0;
+  uint8_t readyForNextReading = false;
   
-  GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1);       // push-buttons SW1 e SW2 como entrada
-  GPIOPadConfigSet(GPIO_PORTJ_BASE, GPIO_PIN_0 | GPIO_PIN_1, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-  
-  SysTickIntEnable();
-  
-  while(1){
-    if(GPIOPinRead(GPIO_PORTJ_BASE, GPIO_PIN_0) == GPIO_PIN_0)          // Testa estado do push-button SW1
-      GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0);                     // Apaga LED D3
-    else
-      GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_PIN_4);            // Acende LED D3
+  while(1)
+  {
+    GPIOPinWrite(GPIO_PORTM_BASE, GPIO_PIN_6, 1);
     
-    if(GPIOPinRead(GPIO_PORTJ_BASE, GPIO_PIN_1) == GPIO_PIN_1)          // Testa estado do push-button SW2
-      GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0);                     // Apaga LED D4
-    else
-      GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_PIN_0);            // Acende LED D4
+    for(timeBaseCounter = 0; timeBaseCounter < TIME_BASE_MAX; timeBaseCounter++)
+    {
+       if(readyForNextReading && readGPIO == 0)
+       {
+         frequencyCounter++;
+         readyForNextReading = false;
+       }
+       else if (readGPIO == 1)
+       {
+         readyForNextReading = true;
+       }
+       
+       
+    }
+    
   } // while
 } // main
