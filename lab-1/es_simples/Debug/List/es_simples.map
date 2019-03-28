@@ -1,0 +1,227 @@
+###############################################################################
+#
+# IAR ELF Linker V8.32.3.193/W32 for ARM                  28/Mar/2019  17:39:13
+# Copyright 2007-2019 IAR Systems AB.
+#
+#    Output file  =  
+#        C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\Exe\es_simples.out
+#    Map file     =  
+#        C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\List\es_simples.map
+#    Command line =  
+#        -f C:\Users\Marcelo\AppData\Local\Temp\EW2B87.tmp
+#        (C:\repositories\sistemas-embarcados\lab-1\driverlib\ewarm\Exe\driverlib.a
+#        C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\Obj\main.o
+#        C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\Obj\startup_ewarm.o
+#        --no_out_extension -o
+#        C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\Exe\es_simples.out
+#        --map
+#        C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\List\es_simples.map
+#        --config "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        8.2\arm\config\linker\TexasInstruments\TM4C1294NC.icf" --semihosting
+#        --entry __iar_program_start --vfe --text_out locale)
+#
+###############################################################################
+
+*******************************************************************************
+*** RUNTIME MODEL ATTRIBUTES
+***
+
+CppFlavor       = *
+__SystemLibrary = DLib
+__dlib_version  = 6
+
+
+*******************************************************************************
+*** HEAP SELECTION
+***
+
+The basic heap was selected because some modules are built with
+size limitations (and not runtime checking), and --advanced_heap
+was not specified.
+
+
+*******************************************************************************
+*** PLACEMENT SUMMARY
+***
+
+"A0":  place at 0x0 { ro section .intvec };
+"P1":  place in [from 0x0 to 0xf'ffff] { ro };
+define block CSTACK with size = 32K, alignment = 8 { };
+define block HEAP with size = 64K, alignment = 8 { };
+"P2":  place in [from 0x2000'0000 to 0x2003'ffff] {
+          rw, block CSTACK, block HEAP };
+do not initialize { section .noinit };
+
+  Section          Kind         Address   Size  Object
+  -------          ----         -------   ----  ------
+"A0":                                    0x200
+  .intvec          const            0x0  0x200  startup_ewarm.o [1]
+                                - 0x200  0x200
+
+"P1":                                    0x8cc
+  .text            ro code        0x200  0x2ac  sysctl.o [3]
+  .rodata          const          0x4ac  0x1b0  sysctl.o [3]
+  .text            ro code        0x65c  0x176  gpio.o [3]
+  .text            ro code        0x7d2   0x3a  zero_init3.o [5]
+  .text            ro code        0x80c  0x12c  main.o [1]
+  .text            ro code        0x938   0x28  systick.o [3]
+  .rodata          const          0x960   0x6c  sysctl.o [3]
+  .rodata          const          0x9cc   0x30  sysctl.o [3]
+  .text            ro code        0x9fc   0x28  data_init.o [5]
+  .text            ro code        0xa24   0x22  fpinit_M.o [4]
+  .iar.init_table  const          0xa48   0x10  - Linker created -
+  .text            ro code        0xa58   0x1e  startup_ewarm.o [1]
+  .text            ro code        0xa76    0xc  cstartup_M.o [5]
+  .text            ro code        0xa84   0x1e  cmain.o [5]
+  .text            ro code        0xaa2    0x4  low_level_init.o [2]
+  .text            ro code        0xaa6    0x4  exit.o [2]
+  .text            ro code        0xaac    0xa  cexit.o [5]
+  .text            ro code        0xab8   0x14  exit.o [6]
+  .rodata          const          0xacc    0x0  zero_init3.o [5]
+                                - 0xacc  0x8cc
+
+"P2", part 1 of 2:                         0x4
+  .bss             zero     0x2000'0000    0x1  main.o [1]
+                          - 0x2000'0001    0x1
+
+"P2", part 2 of 2:                       0x100
+  .noinit          uninit   0x2000'0004  0x100  startup_ewarm.o [1]
+                          - 0x2000'0104  0x100
+
+Unused ranges:
+
+         From           To      Size
+         ----           --      ----
+        0xacc     0xf'ffff  0xf'f534
+  0x2000'0104  0x2003'ffff  0x3'fefc
+
+
+*******************************************************************************
+*** INIT TABLE
+***
+
+          Address      Size
+          -------      ----
+Zero (__iar_zero_init3)
+    1 destination range, total size 0x1:
+          0x2000'0000   0x1
+
+
+
+*******************************************************************************
+*** MODULE SUMMARY
+***
+
+    Module            ro code  ro data  rw data
+    ------            -------  -------  -------
+command line/config:
+    -------------------------------------------
+    Total:
+
+C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\Obj: [1]
+    main.o                300                 1
+    startup_ewarm.o        30      512      256
+    -------------------------------------------
+    Total:                330      512      257
+
+dl7M_tln.a: [2]
+    exit.o                  4
+    low_level_init.o        4
+    -------------------------------------------
+    Total:                  8
+
+driverlib.a: [3]
+    gpio.o                374
+    sysctl.o              684      588
+    systick.o              40
+    -------------------------------------------
+    Total:              1 098      588
+
+m7M_tls.a: [4]
+    fpinit_M.o             34
+    -------------------------------------------
+    Total:                 34
+
+rt7M_tl.a: [5]
+    cexit.o                10
+    cmain.o                30
+    cstartup_M.o           12
+    data_init.o            40
+    zero_init3.o           58
+    -------------------------------------------
+    Total:                150
+
+shb_l.a: [6]
+    exit.o                 20
+    -------------------------------------------
+    Total:                 20
+
+    Gaps                    6        2
+    Linker created                  16
+-----------------------------------------------
+    Grand Total:        1 646    1 118      257
+
+
+*******************************************************************************
+*** ENTRY LIST
+***
+
+Entry                       Address   Size  Type      Object
+-----                       -------   ----  ----      ------
+.iar.init_table$$Base         0xa48          --   Gb  - Linker created -
+.iar.init_table$$Limit        0xa58          --   Gb  - Linker created -
+?main                         0xa85         Code  Gb  cmain.o [5]
+FaultISR                      0xa73    0x2  Code  Lc  startup_ewarm.o [1]
+GPIODirModeSet                0x65d   0x28  Code  Gb  gpio.o [3]
+GPIOPadConfigSet              0x685  0x102  Code  Gb  gpio.o [3]
+GPIOPinRead                   0x787    0x8  Code  Gb  gpio.o [3]
+GPIOPinTypeGPIOInput          0x79b   0x14  Code  Gb  gpio.o [3]
+GPIOPinTypeGPIOOutput         0x7af    0xa  Code  Gb  gpio.o [3]
+GPIOPinWrite                  0x78f    0x8  Code  Gb  gpio.o [3]
+IntDefaultHandler             0xa75    0x2  Code  Lc  startup_ewarm.o [1]
+LED_D1                  0x2000'0000    0x1  Data  Gb  main.o [1]
+NMISR                         0xa71    0x2  Code  Lc  startup_ewarm.o [1]
+Region$$Table$$Base           0xa48          --   Gb  - Linker created -
+Region$$Table$$Limit          0xa58          --   Gb  - Linker created -
+ResetISR                      0xa59   0x12  Code  Gb  startup_ewarm.o [1]
+SysCtlClockFreqSet            0x261  0x20a  Code  Gb  sysctl.o [3]
+SysCtlPeripheralEnable        0x243    0x8  Code  Gb  sysctl.o [3]
+SysCtlPeripheralReady         0x221    0x8  Code  Gb  sysctl.o [3]
+SysTickEnable                 0x939    0xc  Code  Gb  systick.o [3]
+SysTickIntEnable              0x945    0xc  Code  Gb  systick.o [3]
+SysTickPeriodSet              0x951    0x8  Code  Gb  systick.o [3]
+SysTick_Handler               0x80d   0x18  Code  Gb  main.o [1]
+_SysCtlMemTimingGet           0x201   0x20  Code  Lc  sysctl.o [3]
+__cmain                       0xa85         Code  Gb  cmain.o [5]
+__exit                        0xab9   0x14  Code  Gb  exit.o [6]
+__iar_data_init3              0x9fd   0x28  Code  Gb  data_init.o [5]
+__iar_init_vfp                0xa25         Code  Gb  fpinit_M.o [4]
+__iar_program_start           0xa77         Code  Gb  cstartup_M.o [5]
+__iar_zero_init3              0x7d3   0x3a  Code  Gb  zero_init3.o [5]
+__low_level_init              0xaa3    0x4  Code  Gb  low_level_init.o [2]
+__vector_table                  0x0  0x200  Data  Gb  startup_ewarm.o [1]
+_call_main                    0xa91         Code  Gb  cmain.o [5]
+_exit                         0xaad         Code  Gb  cexit.o [5]
+_main                         0xa9f         Code  Gb  cmain.o [5]
+exit                          0xaa7    0x4  Code  Gb  exit.o [2]
+g_pppui32XTALtoVCO            0x4ac  0x1b0  Data  Lc  sysctl.o [3]
+g_pui32VCOFrequencies         0x4a4    0x8  Data  Lc  sysctl.o [3]
+g_pui32Xtals                  0x960   0x6c  Data  Lc  sysctl.o [3]
+g_sXTALtoMEMTIM               0x9cc   0x30  Data  Lc  sysctl.o [3]
+main                          0x825   0xea  Code  Gb  main.o [1]
+pui32Stack              0x2000'0004  0x100  Data  Lc  startup_ewarm.o [1]
+
+
+[1] = C:\repositories\sistemas-embarcados\lab-1\es_simples\Debug\Obj
+[2] = dl7M_tln.a
+[3] = driverlib.a
+[4] = m7M_tls.a
+[5] = rt7M_tl.a
+[6] = shb_l.a
+
+  1 646 bytes of readonly  code memory
+  1 118 bytes of readonly  data memory
+    257 bytes of readwrite data memory
+
+Errors: none
+Warnings: none

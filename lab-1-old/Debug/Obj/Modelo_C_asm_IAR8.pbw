@@ -1,0 +1,44 @@
+[
+  {
+    "ID": "c:@F@f_asm",
+    "What": "Function",
+    "defdec": "Dec",
+    "display": "int f_asm(int, int)",
+    "location": {
+      "column": "12",
+      "line": "1",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-1\\src\\main.c"
+    },
+    "name": "f_asm",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:@F@main",
+    "What": "Function",
+    "defdec": "Def",
+    "display": "int main(void)",
+    "location": {
+      "column": "5",
+      "line": "3",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-1\\src\\main.c"
+    },
+    "name": "main",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:main.c@50@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "7",
+      "line": "4",
+      "path": "C:\\repositories\\sistemas-embarcados\\lab-1\\src\\main.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  }
+]
