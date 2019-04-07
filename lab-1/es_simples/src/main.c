@@ -14,9 +14,12 @@
 #define TIME_BASE_MAX 961538
 
 void readGPIO();
-void menu(void);
+void timeBaseMenu(void);
+void frequencyScaleMenu(void);
 
 uint32_t timeBaseMax = TIME_BASE_MAX;
+uint32_t finalTimeBase;
+bool khzScale = 0;
 
 void main(void)
 {
@@ -47,7 +50,7 @@ void main(void)
   GPIOPinConfigure(GPIO_PA0_U0RX);
   GPIOPinConfigure(GPIO_PA1_U0TX);
 
-  UARTStdioConfig(0, 115200, ui32SysClock);
+  UARTStdioConfig(0, 57600, ui32SysClock);
 
   UARTEchoSet(false);
 
@@ -60,11 +63,15 @@ void main(void)
 
   char receivedCharacter;
 
+  finalTimeBase = timeBaseMax / (khzScale ? 1000 : 1);
+
+  uint32_t serialDelay = 0;
+
   while (1)
   {
     // Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
-    for (timeBaseCounter = 0; timeBaseCounter < timeBaseMax; timeBaseCounter++)
+    for (timeBaseCounter = 0; timeBaseCounter < finalTimeBase; timeBaseCounter++)
     {
       bool isPinHigh = (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1;
 
@@ -83,25 +90,35 @@ void main(void)
     }
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
 
-    UARTprintf("Frequencia: %i Hz\n", frequencyCounter);
-    frequencyCounter = 0;
-
     uint8_t bytesAvailable = UARTRxBytesAvail();
     if (bytesAvailable > 0)
       receivedCharacter = UARTgetc();
 
-    if (receivedCharacter == 'C')
-      menu();
+    if (receivedCharacter == 'T')
+      timeBaseMenu();
+    else if (receivedCharacter == 'E')
+      frequencyScaleMenu();
+    else
+    {
+      if (khzScale && ++serialDelay > 1000)
+      {
+        UARTprintf("Frequencia: %i kHz\n", frequencyCounter);
+        serialDelay = 0;
+      }
+      else if (!khzScale)
+        UARTprintf("Frequencia: %i Hz\n", frequencyCounter);
+    }
 
-    // UARTprintf(receivedString);
+    frequencyCounter = 0;
     receivedCharacter = 'Z';
 
   } // while
 } // main
 
-void menu()
+void timeBaseMenu()
 {
   UARTprintf("Digite a constante de tempo desejada:\n");
+
   char stringifiedNumber[11];
   uint32_t decodedConstant = 0;
   UARTgets(stringifiedNumber, 11);
@@ -122,6 +139,25 @@ void menu()
   UARTprintf("Constante escolhida: %u\n", decodedConstant);
 
   timeBaseMax = decodedConstant;
-  
+
+  return;
+}
+
+void frequencyScaleMenu()
+{
+  UARTprintf("Digite a escala desejada (h ou k):\n");
+
+  while (!UARTBusy(UART0_BASE))
+    ;
+  switch (UARTgetc())
+  {
+  case 'h':
+    khzScale = false;
+  case 'k':
+    khzScale = true;
+  }
+
+  finalTimeBase = timeBaseMax / (khzScale ? 1000 : 1);
+
   return;
 }
