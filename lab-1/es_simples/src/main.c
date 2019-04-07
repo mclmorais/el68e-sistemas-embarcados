@@ -5,8 +5,11 @@
 #include "driverlib/sysctl.h" // driverlib
 #include "driverlib/gpio.h"
 #include "driverlib/systick.h"
+#include "driverlib/uart.h"
+#include "utils/uartstdio.h"
 
-#define TIME_BASE_MAX 1000000
+
+#define TIME_BASE_MAX 961538 
 
 void readGPIO();
 
@@ -17,41 +20,51 @@ void main(void){
                                               SYSCTL_CFG_VCO_480    ),
                                               24000000); // PLL em 24MHz
   
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);          // Habilita GPIO N (LED D1 = PN1, LED D2 = PN0)
-  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOM));   // Aguarda final da habilitação
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);          // Habilita GPIO N (LED D1 = PN1, LED D2 = PN0)
+  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));   // Aguarda final da habilitação
   
-  // Configura LED 1 (N0) como saída para verificação da base de tempo
-  GPIOPinTypeGPIOOutput(GPIO_PORTM_BASE, GPIO_PIN_6);
+  GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0);
+  GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);  
   
-  // Escreve 0 em N0
-  GPIOPinWrite(GPIO_PORTM_BASE, GPIO_PIN_6, 0);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0));
   
-  // Configura M0
-  GPIOPadConfigSet(GPIO_PORTM_BASE, GPIO_PIN_6, GPIO_STRENGTH_12MA, GPIO_PIN_TYPE_STD);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA));
+
+  GPIOPinTypeGPIOInput(GPIO_PORTA_AHB_BASE, GPIO_PIN_2);
+  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+
+  
+  UARTStdioConfig(0, 9600, 24000000);
+  
+  
+  UARTprintf("Hello world!\n");
   
   uint32_t timeBaseCounter = 0;
   
   uint32_t frequencyCounter = 0;
   uint8_t readyForNextReading = false;
   
+  uint8_t togglePN0 = 1;
+  
   while(1)
   {
-    GPIOPinWrite(GPIO_PORTM_BASE, GPIO_PIN_6, 1);
+    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, togglePN0);
+    togglePN0 = !togglePN0;
     
     for(timeBaseCounter = 0; timeBaseCounter < TIME_BASE_MAX; timeBaseCounter++)
     {
-       if(readyForNextReading && readGPIO == 0)
-       {
-         frequencyCounter++;
-         readyForNextReading = false;
-       }
-       else if (readGPIO == 1)
-       {
-         readyForNextReading = true;
-       }
-       
-       
-    }
-    
+      if(readyForNextReading && (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == 0)
+      {
+        frequencyCounter++;
+        readyForNextReading = false;
+      }
+      else if((GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == 1)
+      {
+        readyForNextReading = true;
+      }
+    }    
+
   } // while
 } // main
