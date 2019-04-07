@@ -18,7 +18,6 @@ void menu(void);
 
 uint32_t timeBaseMax = TIME_BASE_MAX;
 
-
 void main(void)
 {
   uint32_t ui32SysClock = SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
@@ -60,7 +59,6 @@ void main(void)
   uint8_t readyForNextReading = true;
 
   char receivedCharacter;
-
 
   while (1)
   {
@@ -104,19 +102,26 @@ void main(void)
 void menu()
 {
   UARTprintf("Digite a constante de tempo desejada:\n");
-  char stringifiedNumber[10];
+  char stringifiedNumber[11];
   uint32_t decodedConstant = 0;
-  UARTgets(stringifiedNumber, 10);
+  UARTgets(stringifiedNumber, 11);
 
   //Transforma string numérica recebida em um unsigned integer
   decodedConstant += (stringifiedNumber[9] - 48);
   for (uint8_t i = 0; i < 9; i++)
   {
     int powerOfTen = 1;
-    for(uint8_t j = 0; j < (9-i); j++)
-        powerOfTen *= 10;
+    for (uint8_t j = 0; j < (9 - i); j++)
+      powerOfTen *= 10;
     decodedConstant += (stringifiedNumber[i] - 48) * powerOfTen;
   }
 
+  if (decodedConstant == 0)
+    decodedConstant = TIME_BASE_MAX;
+
+  UARTprintf("Constante escolhida: %u\n", decodedConstant);
+
   timeBaseMax = decodedConstant;
+  
+  return;
 }
