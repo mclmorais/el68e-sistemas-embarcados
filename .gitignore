@@ -50,3 +50,7 @@
 *.exe
 *.out
 *.app
+
+*.lst
+*.map
+*.pbw
