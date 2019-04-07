@@ -22,21 +22,22 @@ void main(void){
                                               SYSCTL_CFG_VCO_480    ),
                                               24000000); // PLL em 24MHz
   
+  // Ativa porta N de GPIO e seta pinos 0 e 1 como saída e entrada
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);          
   while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));
   
   GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0);
-  GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);  
+  GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);
   
+  // Ativa UART0
   SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
   while(!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0));
   
+  // Ativa pinos da porta A para utilização da UART
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-  
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA));
-    GPIOPinConfigure(GPIO_PA0_U0RX);
-    GPIOPinConfigure(GPIO_PA1_U0TX);
-    GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA));
+  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+  GPIOPinConfigure(GPIO_PA0_U0RX | GPIO_PA1_U0TX);
 
   
   UARTStdioConfig(0, 115200, ui32SysClock);

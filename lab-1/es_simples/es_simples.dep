@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
     <fileVersion>4</fileVersion>
-    <fileChecksum>951341483</fileChecksum>
+    <fileChecksum>2423243036</fileChecksum>
     <configuration>
         <name>Debug</name>
         <outputs>
@@ -50,8 +50,10 @@
             <file>$PROJ_DIR$\..\inc\hw_memmap.h</file>
             <file>$TOOLKIT_DIR$\inc\c\DLib_Product.h</file>
             <file>$PROJ_DIR$\..\driverlib\pin_map.h</file>
+            <file>$PROJ_DIR$\Debug\Obj\uartstdio.__cstat.et</file>
             <file>$PROJ_DIR$\..\driverlib\adc.c</file>
             <file>$PROJ_DIR$\..\display\src\main.c</file>
+            <file>$PROJ_DIR$\..\utils\ewarm\Exe\utils.a</file>
         </outputs>
         <file>
             <name>[ROOT_NODE]</name>
@@ -92,7 +94,7 @@
             <inputs>
                 <tool>
                     <name>ILINK</name>
-                    <file> 23 33 18 16 13 32 19 39 29</file>
+                    <file> 23 33 18 16 13 48 32 19 39 29</file>
                 </tool>
             </inputs>
         </file>
@@ -102,6 +104,10 @@
                 <tool>
                     <name>ICCARM</name>
                     <file> 13</file>
+                </tool>
+                <tool>
+                    <name>__cstat</name>
+                    <file> 45</file>
                 </tool>
                 <tool>
                     <name>BICOMP</name>
@@ -173,6 +179,10 @@
                 </tool>
             </inputs>
         </file>
+        <forcedrebuild>
+            <name>[MULTI_TOOL]</name>
+            <tool>ILINK</tool>
+        </forcedrebuild>
     </configuration>
     <configuration>
         <name>Release</name>

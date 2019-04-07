@@ -12,5 +12,8 @@
     <project>
         <path>$WS_DIR$\grlib\grlib.ewp</path>
     </project>
+    <project>
+        <path>$WS_DIR$\utils\utils.ewp</path>
+    </project>
     <batchBuild />
 </workspace>

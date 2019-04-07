@@ -21,7 +21,8 @@
 // This is part of revision 9453 of the Stellaris Firmware Development Package.
 //
 //*****************************************************************************
-
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"

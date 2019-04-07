@@ -121,7 +121,7 @@
                 </option>
                 <option>
                     <name>OGUseCmsis</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OGUseCmsisDspLib</name>
@@ -2085,6 +2085,6 @@
         <name>$PROJ_DIR$\src\startup_ewarm.c</name>
     </file>
     <file>
-        <name>$PROJ_DIR$\src\uartstdio.c</name>
+        <name>$PROJ_DIR$\..\utils\ewarm\Exe\utils.a</name>
     </file>
 </project>
