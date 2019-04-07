@@ -48,27 +48,33 @@ void main(void){
   uint32_t timeBaseCounter = 0;
   
   uint32_t frequencyCounter = 0;
-  uint8_t readyForNextReading = false;
-  
-  uint8_t togglePN0 = 1;
+  uint8_t readyForNextReading = true;
   
   while(1)
   {
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, togglePN0);
-    togglePN0 = !togglePN0;
-    
+    // Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
+    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
     for(timeBaseCounter = 0; timeBaseCounter < TIME_BASE_MAX; timeBaseCounter++)
     {
-      if(readyForNextReading && (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == 0)
+      bool isPinHigh = (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1;
+
+      // Conta um pulso se este foi o primeiro LOW recebido após o pino estar em HIGH.
+      // Após medir, impede que pulsos em LOW sejam contabilizados até um pulso em HIGH ser adquirido novamente.
+      // (impede que várias contagem sejam feitas no mesmo pulso LOW caso faquisição >> fmedida)
+      if(readyForNextReading && !isPinHigh)
       {
         frequencyCounter++;
         readyForNextReading = false;
       }
-      else if((GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == 1)
+      else if(isPinHigh)
       {
         readyForNextReading = true;
       }
     }    
+    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
+
+    UARTprintf("%i\n", frequencyCounter);
+    frequencyCounter = 0;
 
   } // while
 } // main
