@@ -14,6 +14,10 @@
 #define TIME_BASE_MAX 961538
 
 void readGPIO();
+void menu(void);
+
+uint32_t timeBaseMax = TIME_BASE_MAX;
+
 
 void main(void)
 {
@@ -46,6 +50,8 @@ void main(void)
 
   UARTStdioConfig(0, 115200, ui32SysClock);
 
+  UARTEchoSet(false);
+
   UARTprintf("Laboratorio 1 - Frequencimetro\n");
 
   uint32_t timeBaseCounter = 0;
@@ -55,11 +61,12 @@ void main(void)
 
   char receivedCharacter;
 
+
   while (1)
   {
     // Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
-    for (timeBaseCounter = 0; timeBaseCounter < TIME_BASE_MAX; timeBaseCounter++)
+    for (timeBaseCounter = 0; timeBaseCounter < timeBaseMax; timeBaseCounter++)
     {
       bool isPinHigh = (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1;
 
@@ -84,9 +91,32 @@ void main(void)
     uint8_t bytesAvailable = UARTRxBytesAvail();
     if (bytesAvailable > 0)
       receivedCharacter = UARTgetc();
-    UARTprintf("%c",receivedCharacter);
-    // UARTgets(receivedCharacter, 5);
-    // UARTprintf(receivedCharacter);
+
+    if (receivedCharacter == 'C')
+      menu();
+
+    // UARTprintf(receivedString);
+    receivedCharacter = 'Z';
 
   } // while
 } // main
+
+void menu()
+{
+  UARTprintf("Digite a constante de tempo desejada:\n");
+  char stringifiedNumber[10];
+  uint32_t decodedConstant = 0;
+  UARTgets(stringifiedNumber, 10);
+
+  //Transforma string numérica recebida em um unsigned integer
+  decodedConstant += (stringifiedNumber[9] - 48);
+  for (uint8_t i = 0; i < 9; i++)
+  {
+    int powerOfTen = 1;
+    for(uint8_t j = 0; j < (9-i); j++)
+        powerOfTen *= 10;
+    decodedConstant += (stringifiedNumber[i] - 48) * powerOfTen;
+  }
+
+  timeBaseMax = decodedConstant;
+}
