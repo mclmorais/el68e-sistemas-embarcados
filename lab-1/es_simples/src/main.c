@@ -3,6 +3,8 @@
 #include "inc/tm4c1294ncpdt.h" // CMSIS-Core
 #include "inc/hw_memmap.h"
 #include "driverlib/sysctl.h" // driverlib
+#include "driverlib/pin_map.h"
+#include "driverlib/rom.h"
 #include "driverlib/gpio.h"
 #include "driverlib/systick.h"
 #include "driverlib/uart.h"
@@ -20,8 +22,8 @@ void main(void){
                                               SYSCTL_CFG_VCO_480    ),
                                               24000000); // PLL em 24MHz
   
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);          // Habilita GPIO N (LED D1 = PN1, LED D2 = PN0)
-  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));   // Aguarda final da habilitação
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);          
+  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));
   
   GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0);
   GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);  
@@ -30,13 +32,14 @@ void main(void){
   while(!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0));
   
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+  
     while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA));
-
-  GPIOPinTypeGPIOInput(GPIO_PORTA_AHB_BASE, GPIO_PIN_2);
-  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    GPIOPinConfigure(GPIO_PA0_U0RX);
+    GPIOPinConfigure(GPIO_PA1_U0TX);
+    GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
   
-  UARTStdioConfig(0, 9600, 24000000);
+  UARTStdioConfig(0, 115200, ui32SysClock);
   
   
   UARTprintf("Hello world!\n");
