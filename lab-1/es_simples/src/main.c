@@ -43,7 +43,7 @@ void main(void){
   UARTStdioConfig(0, 115200, ui32SysClock);
   
   
-  UARTprintf("Hello world!\n");
+  UARTprintf("Laboratorio 1 - Frequencimetro\n");
   
   uint32_t timeBaseCounter = 0;
   
