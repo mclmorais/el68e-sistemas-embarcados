@@ -2,7 +2,7 @@
 //
 // softssi.c - Driver for the SoftSSI.
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -29,6 +29,8 @@
 //
 //*****************************************************************************
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
@@ -49,7 +51,7 @@
 
 //*****************************************************************************
 //
-// The flags in the SoftSSI ucFlags structure member.
+// The flags in the SoftSSI ui8Flags structure member.
 //
 //*****************************************************************************
 #define SOFTSSI_FLAG_ENABLE     0x80
@@ -60,12 +62,12 @@
 //
 //! Sets the configuration of a SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ucProtocol specifes the data transfer protocol.
-//! \param ucBits specifies the number of bits transferred per frame.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui8Protocol specifes the data transfer protocol.
+//! \param ui8Bits specifies the number of bits transferred per frame.
 //!
 //! This function configures the data format of a SoftSSI module.  The
-//! \e ucProtocol parameter can be one of the following values:
+//! \e ui8Protocol parameter can be one of the following values:
 //! \b SOFTSSI_FRF_MOTO_MODE_0, \b SOFTSSI_FRF_MOTO_MODE_1,
 //! \b SOFTSSI_FRF_MOTO_MODE_2, or \b SOFTSSI_FRF_MOTO_MODE_3.  These frame
 //! formats imply the following polarity and phase configurations:
@@ -78,114 +80,114 @@
 //!   1       1   SOFTSSI_FRF_MOTO_MODE_3
 //! </pre>
 //!
-//! The \e ucBits parameter defines the width of the data transfers, and can be
-//! a value between 4 and 16, inclusive.
+//! The \e ui8Bits parameter defines the width of the data transfers, and can
+//! be a value between 4 and 16, inclusive.
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftSSIConfigSet(tSoftSSI *pSSI, unsigned char ucProtocol,
-                 unsigned char ucBits)
+SoftSSIConfigSet(tSoftSSI *psSSI, uint8_t ui8Protocol,
+                 uint8_t ui8Bits)
 {
     //
     // See if a GPIO pin has been set for Fss.
     //
-    if(pSSI->ulFssGPIO != 0)
+    if(psSSI->ui32FssGPIO != 0)
     {
         //
         // Configure the Fss pin.
         //
-        MAP_GPIOPinTypeGPIOOutput(pSSI->ulFssGPIO & 0xfffff000,
-                                  (pSSI->ulFssGPIO & 0x00000fff) >> 2);
+        MAP_GPIOPinTypeGPIOOutput(psSSI->ui32FssGPIO & 0xfffff000,
+                                  (psSSI->ui32FssGPIO & 0x00000fff) >> 2);
 
         //
         // Set the Fss pin high.
         //
-        HWREG(pSSI->ulFssGPIO) = 255;
+        HWREG(psSSI->ui32FssGPIO) = 255;
     }
 
     //
     // Configure the Clk pin.
     //
-    MAP_GPIOPinTypeGPIOOutput(pSSI->ulClkGPIO & 0xfffff000,
-                              (pSSI->ulClkGPIO & 0x00000fff) >> 2);
+    MAP_GPIOPinTypeGPIOOutput(psSSI->ui32ClkGPIO & 0xfffff000,
+                              (psSSI->ui32ClkGPIO & 0x00000fff) >> 2);
 
     //
     // Set the Clk pin high or low based on the configured clock polarity.
     //
-    if((ucProtocol & SOFTSSI_FLAG_SPO) == 0)
+    if((ui8Protocol & SOFTSSI_FLAG_SPO) == 0)
     {
-        HWREG(pSSI->ulClkGPIO) = 0;
+        HWREG(psSSI->ui32ClkGPIO) = 0;
     }
     else
     {
-        HWREG(pSSI->ulClkGPIO) = 255;
+        HWREG(psSSI->ui32ClkGPIO) = 255;
     }
 
     //
     // Configure the Tx pin and set it low.
     //
-    MAP_GPIOPinTypeGPIOOutput(pSSI->ulTxGPIO & 0xfffff000,
-                              (pSSI->ulTxGPIO & 0x00000fff) >> 2);
-    HWREG(pSSI->ulTxGPIO) = 0;
+    MAP_GPIOPinTypeGPIOOutput(psSSI->ui32TxGPIO & 0xfffff000,
+                              (psSSI->ui32TxGPIO & 0x00000fff) >> 2);
+    HWREG(psSSI->ui32TxGPIO) = 0;
 
     //
     // See if a GPIO pin has been set for Rx.
     //
-    if(pSSI->ulRxGPIO != 0)
+    if(psSSI->ui32RxGPIO != 0)
     {
         //
         // Configure the Rx pin.
         //
-        MAP_GPIOPinTypeGPIOInput(pSSI->ulRxGPIO & 0xfffff000,
-                                 (pSSI->ulRxGPIO & 0x00000fff) >> 2);
+        MAP_GPIOPinTypeGPIOInput(psSSI->ui32RxGPIO & 0xfffff000,
+                                 (psSSI->ui32RxGPIO & 0x00000fff) >> 2);
     }
 
     //
     // Make sure that the transmit and receive FIFOs are empty.
     //
-    pSSI->usTxBufferRead = 0;
-    pSSI->usTxBufferWrite = 0;
-    pSSI->usRxBufferRead = 0;
-    pSSI->usRxBufferWrite = 0;
+    psSSI->ui16TxBufferRead = 0;
+    psSSI->ui16TxBufferWrite = 0;
+    psSSI->ui16RxBufferRead = 0;
+    psSSI->ui16RxBufferWrite = 0;
 
     //
     // Save the frame protocol.
     //
-    pSSI->ucFlags = ucProtocol;
+    psSSI->ui8Flags = ui8Protocol;
 
     //
     // Save the number of data bits.
     //
-    pSSI->ucBits = ucBits;
+    psSSI->ui8Bits = ui8Bits;
 
     //
     // Since the FIFOs are empty, the transmit FIFO "interrupt" is asserted.
     //
-    pSSI->ucIntStatus = SOFTSSI_TXFF;
+    psSSI->ui8IntStatus = SOFTSSI_TXFF;
 
     //
     // Reset the idle counter.
     //
-    pSSI->ucIdleCount = 0;
+    psSSI->ui8IdleCount = 0;
 
     //
     // Disable the SoftSSI module.
     //
-    pSSI->ucFlags &= ~(SOFTSSI_FLAG_ENABLE);
+    psSSI->ui8Flags &= ~(SOFTSSI_FLAG_ENABLE);
 
     //
     // Start the SoftSSI state machine in the idle state.
     //
-    pSSI->ucState = SOFTSSI_STATE_IDLE;
+    psSSI->ui8State = SOFTSSI_STATE_IDLE;
 }
 
 //*****************************************************************************
 //
 //! Handles the assertion/deassertion of the transmit FIFO ``interrupt''.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function is used to determine when to assert or deassert the transmit
 //! FIFO ``interrupt''.
@@ -194,34 +196,34 @@ SoftSSIConfigSet(tSoftSSI *pSSI, unsigned char ucProtocol,
 //
 //*****************************************************************************
 static void
-SoftSSITxInt(tSoftSSI *pSSI)
+SoftSSITxInt(tSoftSSI *psSSI)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the number of words left in the transmit FIFO.
     //
-    if(pSSI->usTxBufferRead > pSSI->usTxBufferWrite)
+    if(psSSI->ui16TxBufferRead > psSSI->ui16TxBufferWrite)
     {
-        usTemp = (pSSI->usTxBufferLen + pSSI->usTxBufferWrite -
-                  pSSI->usTxBufferRead);
+        ui16Temp = (psSSI->ui16TxBufferLen + psSSI->ui16TxBufferWrite -
+                    psSSI->ui16TxBufferRead);
     }
     else
     {
-        usTemp = pSSI->usTxBufferWrite - pSSI->usTxBufferRead;
+        ui16Temp = psSSI->ui16TxBufferWrite - psSSI->ui16TxBufferRead;
     }
 
     //
     // If the transmit FIFO is now half full or less, generate a transmit FIFO
     // "interrupt".  Otherwise, clear the transmit FIFO "interrupt".
     //
-    if(usTemp <= (pSSI->usTxBufferLen / 2))
+    if(ui16Temp <= (psSSI->ui16TxBufferLen / 2))
     {
-        pSSI->ucIntStatus |= SOFTSSI_TXFF;
+        psSSI->ui8IntStatus |= SOFTSSI_TXFF;
     }
     else
     {
-        pSSI->ucIntStatus &= ~(SOFTSSI_TXFF);
+        psSSI->ui8IntStatus &= ~(SOFTSSI_TXFF);
     }
 }
 
@@ -229,7 +231,7 @@ SoftSSITxInt(tSoftSSI *pSSI)
 //
 //! Handles the assertion/deassertion of the receive FIFO ``interrupt''.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function is used to determine when to assert or deassert the receive
 //! FIFO ``interrupt''.
@@ -238,34 +240,34 @@ SoftSSITxInt(tSoftSSI *pSSI)
 //
 //*****************************************************************************
 static void
-SoftSSIRxInt(tSoftSSI *pSSI)
+SoftSSIRxInt(tSoftSSI *psSSI)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the number of words in the receive FIFO.
     //
-    if(pSSI->usRxBufferRead > pSSI->usRxBufferWrite)
+    if(psSSI->ui16RxBufferRead > psSSI->ui16RxBufferWrite)
     {
-        usTemp = (pSSI->usRxBufferLen + pSSI->usRxBufferWrite -
-                  pSSI->usRxBufferRead);
+        ui16Temp = (psSSI->ui16RxBufferLen + psSSI->ui16RxBufferWrite -
+                    psSSI->ui16RxBufferRead);
     }
     else
     {
-        usTemp = pSSI->usRxBufferWrite - pSSI->usRxBufferRead;
+        ui16Temp = psSSI->ui16RxBufferWrite - psSSI->ui16RxBufferRead;
     }
 
     //
     // If the receive FIFO is now half full or more, generate a receive FIFO
     // "interrupt".  Otherwise, clear the receive FIFO "interrupt".
     //
-    if(usTemp >= (pSSI->usRxBufferLen / 2))
+    if(ui16Temp >= (psSSI->ui16RxBufferLen / 2))
     {
-        pSSI->ucIntStatus |= SOFTSSI_RXFF;
+        psSSI->ui8IntStatus |= SOFTSSI_RXFF;
     }
     else
     {
-        pSSI->ucIntStatus &= ~(SOFTSSI_RXFF);
+        psSSI->ui8IntStatus &= ~(SOFTSSI_RXFF);
     }
 }
 
@@ -273,7 +275,7 @@ SoftSSIRxInt(tSoftSSI *pSSI)
 //
 //! Performs the periodic update of the SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function performs the periodic, time-based updates to the SoftSSI
 //! module.  The transmission and reception of data over the SoftSSI link is
@@ -287,14 +289,14 @@ SoftSSIRxInt(tSoftSSI *pSSI)
 //
 //*****************************************************************************
 void
-SoftSSITimerTick(tSoftSSI *pSSI)
+SoftSSITimerTick(tSoftSSI *psSSI)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the current state of the state machine.
     //
-    switch(pSSI->ucState)
+    switch(psSSI->ui8State)
     {
         //
         // The state machine is idle.
@@ -305,44 +307,44 @@ SoftSSITimerTick(tSoftSSI *pSSI)
             // See if the SoftSSI module is enabled and there is data in the
             // transmit FIFO.
             //
-            if(((pSSI->ucFlags & SOFTSSI_FLAG_ENABLE) != 0) &&
-               (pSSI->usTxBufferRead != pSSI->usTxBufferWrite))
+            if(((psSSI->ui8Flags & SOFTSSI_FLAG_ENABLE) != 0) &&
+               (psSSI->ui16TxBufferRead != psSSI->ui16TxBufferWrite))
             {
                 //
                 // Assert the Fss signal if it is configured.
                 //
-                if(pSSI->ulFssGPIO != 0)
+                if(psSSI->ui32FssGPIO != 0)
                 {
-                    HWREG(pSSI->ulFssGPIO) = 0;
+                    HWREG(psSSI->ui32FssGPIO) = 0;
                 }
 
                 //
                 // Move to the start state.
                 //
-                pSSI->ucState = SOFTSSI_STATE_START;
+                psSSI->ui8State = SOFTSSI_STATE_START;
             }
 
             //
             // Otherwise, see if there is data in the receive FIFO.
             //
-            else if((pSSI->usRxBufferRead != pSSI->usRxBufferWrite) &&
-                    (pSSI->ucIdleCount != 64))
+            else if((psSSI->ui16RxBufferRead != psSSI->ui16RxBufferWrite) &&
+                    (psSSI->ui8IdleCount != 64))
             {
                 //
                 // Increment the idle counter.
                 //
-                pSSI->ucIdleCount++;
+                psSSI->ui8IdleCount++;
 
                 //
                 // See if the idle counter has become large enough to trigger
                 // a timeout "interrupt".
                 //
-                if(pSSI->ucIdleCount == 64)
+                if(psSSI->ui8IdleCount == 64)
                 {
                     //
                     // Trigger the receive timeout "interrupt".
                     //
-                    pSSI->ucIntStatus |= SOFTSSI_RXTO;
+                    psSSI->ui8IntStatus |= SOFTSSI_RXTO;
                 }
             }
 
@@ -360,42 +362,43 @@ SoftSSITimerTick(tSoftSSI *pSSI)
             //
             // Get the next word to transfer from the transmit FIFO.
             //
-            pSSI->usTxData = (pSSI->pusTxBuffer[pSSI->usTxBufferRead] <<
-                              (16 - pSSI->ucBits));
+            psSSI->ui16TxData =
+                (psSSI->pui16TxBuffer[psSSI->ui16TxBufferRead] <<
+                 (16 - psSSI->ui8Bits));
 
             //
             // Initialize the receive buffer to zero.
             //
-            pSSI->usRxData = 0;
+            psSSI->ui16RxData = 0;
 
             //
             // Initialize the count of bits tranferred.
             //
-            pSSI->ucCurrentBit = 0;
+            psSSI->ui8CurrentBit = 0;
 
             //
             // Write the first bit of the transmit word to the Tx pin.
             //
-            HWREG(pSSI->ulTxGPIO) =
-                (pSSI->usTxData & 0x8000) ? 255 : 0;
+            HWREG(psSSI->ui32TxGPIO) =
+                (psSSI->ui16TxData & 0x8000) ? 255 : 0;
 
             //
             // Shift to the next bit of the transmit word.
             //
-            pSSI->usTxData <<= 1;
+            psSSI->ui16TxData <<= 1;
 
             //
             // If in SPI mode 1 or 3, then the Clk signal needs to be toggled.
             //
-            if((pSSI->ucFlags & SOFTSSI_FLAG_SPH) != 0)
+            if((psSSI->ui8Flags & SOFTSSI_FLAG_SPH) != 0)
             {
-                HWREG(pSSI->ulClkGPIO) ^= 255;
+                HWREG(psSSI->ui32ClkGPIO) ^= 255;
             }
 
             //
             // Move to the data input state.
             //
-            pSSI->ucState = SOFTSSI_STATE_IN;
+            psSSI->ui8State = SOFTSSI_STATE_IN;
 
             //
             // This state has been handled.
@@ -411,32 +414,32 @@ SoftSSITimerTick(tSoftSSI *pSSI)
             //
             // Read the next bit from the Rx signal if it is configured.
             //
-            if(pSSI->ulRxGPIO != 0)
+            if(psSSI->ui32RxGPIO != 0)
             {
-                pSSI->usRxData = ((pSSI->usRxData << 1) |
-                                  (HWREG(pSSI->ulRxGPIO) ? 1 : 0));
+                psSSI->ui16RxData = ((psSSI->ui16RxData << 1) |
+                                     (HWREG(psSSI->ui32RxGPIO) ? 1 : 0));
             }
 
             //
             // Toggle the Clk signal.
             //
-            HWREG(pSSI->ulClkGPIO) ^= 255;
+            HWREG(psSSI->ui32ClkGPIO) ^= 255;
 
             //
             // Increment the number of bits transferred.
             //
-            pSSI->ucCurrentBit++;
+            psSSI->ui8CurrentBit++;
 
             //
             // See if the entire word has been transferred.
             //
-            if(pSSI->ucCurrentBit != pSSI->ucBits)
+            if(psSSI->ui8CurrentBit != psSSI->ui8Bits)
             {
                 //
                 // There are more bits to transfer, so move to the data output
                 // state.
                 //
-                pSSI->ucState = SOFTSSI_STATE_OUT;
+                psSSI->ui8State = SOFTSSI_STATE_OUT;
             }
             else
             {
@@ -444,54 +447,55 @@ SoftSSITimerTick(tSoftSSI *pSSI)
                 // Increment the transmit read pointer, removing the word that
                 // was just transferred from the transmit FIFO.
                 //
-                pSSI->usTxBufferRead++;
-                if(pSSI->usTxBufferRead == pSSI->usTxBufferLen)
+                psSSI->ui16TxBufferRead++;
+                if(psSSI->ui16TxBufferRead == psSSI->ui16TxBufferLen)
                 {
-                    pSSI->usTxBufferRead = 0;
+                    psSSI->ui16TxBufferRead = 0;
                 }
 
                 //
                 // See if a transmit FIFO "interrupt" needs to be asserted.
                 //
-                SoftSSITxInt(pSSI);
+                SoftSSITxInt(psSSI);
 
                 //
                 // Determine the new value for the receive FIFO write pointer.
                 //
-                usTemp = pSSI->usRxBufferWrite + 1;
-                if(usTemp >= pSSI->usRxBufferLen)
+                ui16Temp = psSSI->ui16RxBufferWrite + 1;
+                if(ui16Temp >= psSSI->ui16RxBufferLen)
                 {
-                    usTemp = 0;
+                    ui16Temp = 0;
                 }
 
                 //
                 // See if there is space in the receive FIFO for the word that
                 // was just received.
                 //
-                if(usTemp == pSSI->usRxBufferRead)
+                if(ui16Temp == psSSI->ui16RxBufferRead)
                 {
                     //
                     // The receive FIFO is full, so generate a receive FIFO
                     // overrun "interrupt".
                     //
-                    pSSI->ucIntStatus |= SOFTSSI_RXOR;
+                    psSSI->ui8IntStatus |= SOFTSSI_RXOR;
                 }
                 else
                 {
                     //
                     // Store the new word into the receive FIFO.
                     //
-                    pSSI->pusRxBuffer[pSSI->usRxBufferWrite] = pSSI->usRxData;
+                    psSSI->pui16RxBuffer[psSSI->ui16RxBufferWrite] =
+                        psSSI->ui16RxData;
 
                     //
                     // Save the new receive FIFO write pointer.
                     //
-                    pSSI->usRxBufferWrite = usTemp;
+                    psSSI->ui16RxBufferWrite = ui16Temp;
 
                     //
                     // See if a receive FIFO "interrupt" needs to be asserted.
                     //
-                    SoftSSIRxInt(pSSI);
+                    SoftSSIRxInt(psSSI);
                 }
 
                 //
@@ -500,31 +504,31 @@ SoftSSITimerTick(tSoftSSI *pSSI)
                 // SoftSSI module is enabled, and the SoftSSI module is in SPI
                 // mode 1 or 3.
                 //
-                if(((pSSI->ucFlags & SOFTSSI_FLAG_ENABLE) != 0) &&
-                   ((pSSI->ucFlags & SOFTSSI_FLAG_SPH) != 0) &&
-                   (pSSI->usTxBufferRead != pSSI->usTxBufferWrite))
+                if(((psSSI->ui8Flags & SOFTSSI_FLAG_ENABLE) != 0) &&
+                   ((psSSI->ui8Flags & SOFTSSI_FLAG_SPH) != 0) &&
+                   (psSSI->ui16TxBufferRead != psSSI->ui16TxBufferWrite))
                 {
                     //
                     // Get the next word to transfer from the transmit FIFO.
                     //
-                    pSSI->usTxData =
-                        (pSSI->pusTxBuffer[pSSI->usTxBufferRead] <<
-                         (16 - pSSI->ucBits));
+                    psSSI->ui16TxData =
+                        (psSSI->pui16TxBuffer[psSSI->ui16TxBufferRead] <<
+                         (16 - psSSI->ui8Bits));
 
                     //
                     // Initialize the receive buffer to zero.
                     //
-                    pSSI->usRxData = 0;
+                    psSSI->ui16RxData = 0;
 
                     //
                     // Initialize the count of bits tranferred.
                     //
-                    pSSI->ucCurrentBit = 0;
+                    psSSI->ui8CurrentBit = 0;
 
                     //
                     // Move to the data output state.
                     //
-                    pSSI->ucState = SOFTSSI_STATE_OUT;
+                    psSSI->ui8State = SOFTSSI_STATE_OUT;
                 }
                 else
                 {
@@ -532,7 +536,7 @@ SoftSSITimerTick(tSoftSSI *pSSI)
                     // The next word should not be transmitted immediately, so
                     // move to the first step of the stop state.
                     //
-                    pSSI->ucState = SOFTSSI_STATE_STOP1;
+                    psSSI->ui8State = SOFTSSI_STATE_STOP1;
                 }
             }
 
@@ -550,22 +554,22 @@ SoftSSITimerTick(tSoftSSI *pSSI)
             //
             // Write the next bit of the transmit word to the Tx pin.
             //
-            HWREG(pSSI->ulTxGPIO) = (pSSI->usTxData & 0x8000) ? 255 : 0;
+            HWREG(psSSI->ui32TxGPIO) = (psSSI->ui16TxData & 0x8000) ? 255 : 0;
 
             //
             // Toggle the Clk signal.
             //
-            HWREG(pSSI->ulClkGPIO) ^= 255;
+            HWREG(psSSI->ui32ClkGPIO) ^= 255;
 
             //
             // Shift to the next bit of the transmit word.
             //
-            pSSI->usTxData <<= 1;
+            psSSI->ui16TxData <<= 1;
 
             //
             // Move to the data input state.
             //
-            pSSI->ucState = SOFTSSI_STATE_IN;
+            psSSI->ui8State = SOFTSSI_STATE_IN;
 
             //
             // This state has been handled.
@@ -581,20 +585,20 @@ SoftSSITimerTick(tSoftSSI *pSSI)
             //
             // Set the Tx pin low.
             //
-            HWREG(pSSI->ulTxGPIO) = 0;
+            HWREG(psSSI->ui32TxGPIO) = 0;
 
             //
             // If in SPI mode 1 or 3, then the Clk signal needs to be toggled.
             //
-            if((pSSI->ucFlags & SOFTSSI_FLAG_SPH) == 0)
+            if((psSSI->ui8Flags & SOFTSSI_FLAG_SPH) == 0)
             {
-                HWREG(pSSI->ulClkGPIO) ^= 255;
+                HWREG(psSSI->ui32ClkGPIO) ^= 255;
             }
 
             //
             // Move to the second step of the stop state.
             //
-            pSSI->ucState = SOFTSSI_STATE_STOP2;
+            psSSI->ui8State = SOFTSSI_STATE_STOP2;
 
             //
             // This state has been handled.
@@ -610,27 +614,27 @@ SoftSSITimerTick(tSoftSSI *pSSI)
             //
             // Deassert the Fss signal if it is configured.
             //
-            if(pSSI->ulFssGPIO != 0)
+            if(psSSI->ui32FssGPIO != 0)
             {
-                HWREG(pSSI->ulFssGPIO) = 255;
+                HWREG(psSSI->ui32FssGPIO) = 255;
             }
 
             //
             // Move to the idle state.
             //
-            pSSI->ucState = SOFTSSI_STATE_IDLE;
+            psSSI->ui8State = SOFTSSI_STATE_IDLE;
 
             //
             // Reset the idle counter.
             //
-            pSSI->ucIdleCount = 0;
+            psSSI->ui8IdleCount = 0;
 
             //
             // See if the end of transfer "interrupt" should be generated.
             //
-            if(pSSI->usTxBufferRead == pSSI->usTxBufferWrite)
+            if(psSSI->ui16TxBufferRead == psSSI->ui16TxBufferWrite)
             {
-                pSSI->ucIntStatus |= SOFTSSI_TXEOT;
+                psSSI->ui8IntStatus |= SOFTSSI_TXEOT;
             }
 
             //
@@ -646,13 +650,13 @@ SoftSSITimerTick(tSoftSSI *pSSI)
     // asserted, this mimics the behavior of a real hardware implementation of
     // the SSI peripheral.
     //
-    while(((pSSI->ucIntStatus & pSSI->ucIntMask) != 0) &&
-          (pSSI->pfnIntCallback != 0))
+    while(((psSSI->ui8IntStatus & psSSI->ui8IntMask) != 0) &&
+          (psSSI->pfnIntCallback != 0))
     {
         //
         // Call the callback function.
         //
-        pSSI->pfnIntCallback();
+        psSSI->pfnIntCallback();
     }
 }
 
@@ -660,7 +664,7 @@ SoftSSITimerTick(tSoftSSI *pSSI)
 //
 //! Enables the SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function enables operation of the SoftSSI module.  The SoftSSI module
 //! must be configured before it is enabled.
@@ -669,19 +673,19 @@ SoftSSITimerTick(tSoftSSI *pSSI)
 //
 //*****************************************************************************
 void
-SoftSSIEnable(tSoftSSI *pSSI)
+SoftSSIEnable(tSoftSSI *psSSI)
 {
     //
     // Enable the SoftSSI module.
     //
-    pSSI->ucFlags |= SOFTSSI_FLAG_ENABLE;
+    psSSI->ui8Flags |= SOFTSSI_FLAG_ENABLE;
 }
 
 //*****************************************************************************
 //
 //! Disables the SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function disables operation of the SoftSSI module.  If a data transfer
 //! is in progress, it is finished before the module is fully disabled.
@@ -690,24 +694,25 @@ SoftSSIEnable(tSoftSSI *pSSI)
 //
 //*****************************************************************************
 void
-SoftSSIDisable(tSoftSSI *pSSI)
+SoftSSIDisable(tSoftSSI *psSSI)
 {
     //
     // Disable the SoftSSI module.
     //
-    pSSI->ucFlags &= ~(SOFTSSI_FLAG_ENABLE);
+    psSSI->ui8Flags &= ~(SOFTSSI_FLAG_ENABLE);
 }
 
 //*****************************************************************************
 //
 //! Enables individual SoftSSI ``interrupt'' sources.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulIntFlags is a bit mask of the ``interrupt'' sources to be enabled.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32IntFlags is a bit mask of the ``interrupt'' sources to be
+//! enabled.
 //!
 //! Enables the indicated SoftSSI ``interrupt'' sources.  Only the sources that
 //! are enabled can be reflected to the callback function; disabled sources do
-//! not result in a callback.  The \e ulIntFlags parameter can be any of the
+//! not result in a callback.  The \e ui32IntFlags parameter can be any of the
 //! \b SOFTSSI_TXEOT, \b SOFTSSI_TXFF, \b SOFTSSI_RXFF, \b SOFTSSI_RXTO, or
 //! \b SOFTSSI_RXOR values.
 //!
@@ -715,23 +720,23 @@ SoftSSIDisable(tSoftSSI *pSSI)
 //
 //*****************************************************************************
 void
-SoftSSIIntEnable(tSoftSSI *pSSI, unsigned long ulIntFlags)
+SoftSSIIntEnable(tSoftSSI *psSSI, uint32_t ui32IntFlags)
 {
     //
     // Enable the specified "interrupts".
     //
-    pSSI->ucIntMask |= ulIntFlags;
+    psSSI->ui8IntMask |= ui32IntFlags;
 }
 
 //*****************************************************************************
 //
 //! Disables individual SoftSSI ``interrupt'' sources.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulIntFlags is a bit mask of the ``interrupt'' sources to be
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32IntFlags is a bit mask of the ``interrupt'' sources to be
 //! disabled.
 //!
-//! Disables the indicated SoftSSI ``interrupt'' sources.  The \e ulIntFlags
+//! Disables the indicated SoftSSI ``interrupt'' sources.  The \e ui32IntFlags
 //! parameter can be any of the \b SOFTSSI_TXEOT, \b SOFTSSI_TXFF,
 //! \b SOFTSSI_RXFF, \b SOFTSSI_RXTO, or \b SOFTSSI_RXOR values.
 //!
@@ -739,19 +744,19 @@ SoftSSIIntEnable(tSoftSSI *pSSI, unsigned long ulIntFlags)
 //
 //*****************************************************************************
 void
-SoftSSIIntDisable(tSoftSSI *pSSI, unsigned long ulIntFlags)
+SoftSSIIntDisable(tSoftSSI *psSSI, uint32_t ui32IntFlags)
 {
     //
     // Disable the specified "interrupts".
     //
-    pSSI->ucIntMask &= ~(ulIntFlags);
+    psSSI->ui8IntMask &= ~(ui32IntFlags);
 }
 
 //*****************************************************************************
 //
 //! Gets the current ``interrupt'' status.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //! \param bMasked is \b false if the raw ``interrupt'' status is required or
 //! \b true if the masked ``interrupt'' status is required.
 //!
@@ -764,8 +769,8 @@ SoftSSIIntDisable(tSoftSSI *pSSI, unsigned long ulIntFlags)
 //! \b SOFTSSI_RXOR.
 //
 //*****************************************************************************
-unsigned long
-SoftSSIIntStatus(tSoftSSI *pSSI, tBoolean bMasked)
+uint32_t
+SoftSSIIntStatus(tSoftSSI *psSSI, bool bMasked)
 {
     //
     // Return either the "interrupt" status or the raw "interrupt" status as
@@ -773,11 +778,11 @@ SoftSSIIntStatus(tSoftSSI *pSSI, tBoolean bMasked)
     //
     if(bMasked)
     {
-        return(pSSI->ucIntStatus & pSSI->ucIntMask);
+        return(psSSI->ui8IntStatus & psSSI->ui8IntMask);
     }
     else
     {
-        return(pSSI->ucIntStatus);
+        return(psSSI->ui8IntStatus);
     }
 }
 
@@ -785,32 +790,33 @@ SoftSSIIntStatus(tSoftSSI *pSSI, tBoolean bMasked)
 //
 //! Clears SoftSSI ``interrupt'' sources.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulIntFlags is a bit mask of the ``interrupt'' sources to be cleared.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32IntFlags is a bit mask of the ``interrupt'' sources to be
+//! cleared.
 //!
 //! The specified SoftSSI ``interrupt'' sources are cleared so that they no
 //! longer assert.  This function must be called in the ``interrupt'' handler
 //! to keep the ``interrupt'' from being recognized again immediately upon
-//! exit.  The \e ulIntFlags parameter is the logical OR of any of the
+//! exit.  The \e ui32IntFlags parameter is the logical OR of any of the
 //! \b SOFTSSI_TXEOT, \b SOFTSSI_RXTO, and \b SOFTSSI_RXOR values.
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftSSIIntClear(tSoftSSI *pSSI, unsigned long ulIntFlags)
+SoftSSIIntClear(tSoftSSI *psSSI, uint32_t ui32IntFlags)
 {
     //
     // Clear the requested "interrupt" sources.
     //
-    pSSI->ucIntStatus &= ~(ulIntFlags) | SOFTSSI_TXFF | SOFTSSI_RXFF;
+    psSSI->ui8IntStatus &= ~(ui32IntFlags) | SOFTSSI_TXFF | SOFTSSI_RXFF;
 }
 
 //*****************************************************************************
 //
 //! Determines if there is any data in the receive FIFO.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function determines if there is any data available to be read from the
 //! receive FIFO.
@@ -819,20 +825,21 @@ SoftSSIIntClear(tSoftSSI *pSSI, unsigned long ulIntFlags)
 //! if there is no data in the receive FIFO.
 //
 //*****************************************************************************
-tBoolean
-SoftSSIDataAvail(tSoftSSI *pSSI)
+bool
+SoftSSIDataAvail(tSoftSSI *psSSI)
 {
     //
     // Return the availability of data.
     //
-    return((pSSI->usRxBufferRead == pSSI->usRxBufferWrite) ? false : true);
+    return((psSSI->ui16RxBufferRead == psSSI->ui16RxBufferWrite) ? false :
+           true);
 }
 
 //*****************************************************************************
 //
 //! Determines if there is any space in the transmit FIFO.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! This function determines if there is space available in the transmit FIFO.
 //!
@@ -840,114 +847,114 @@ SoftSSIDataAvail(tSoftSSI *pSSI)
 //! \b false if there is no space available in the transmit FIFO.
 //
 //*****************************************************************************
-tBoolean
-SoftSSISpaceAvail(tSoftSSI *pSSI)
+bool
+SoftSSISpaceAvail(tSoftSSI *psSSI)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the values of the write pointer once incremented.
     //
-    usTemp = pSSI->usTxBufferWrite + 1;
-    if(usTemp == pSSI->usTxBufferLen)
+    ui16Temp = psSSI->ui16TxBufferWrite + 1;
+    if(ui16Temp == psSSI->ui16TxBufferLen)
     {
-        usTemp = 0;
+        ui16Temp = 0;
     }
 
     //
     // Return the availability of space.
     //
-    return((pSSI->usTxBufferRead == usTemp) ? false : true);
+    return((psSSI->ui16TxBufferRead == ui16Temp) ? false : true);
 }
 
 //*****************************************************************************
 //
 //! Puts a data element into the SoftSSI transmit FIFO.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulData is the data to be transmitted over the SoftSSI interface.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32Data is the data to be transmitted over the SoftSSI interface.
 //!
 //! This function places the supplied data into the transmit FIFO of the
 //! specified SoftSSI module.
 //!
-//! \note The upper 32 - N bits of the \e ulData are discarded, where N is the
-//! data width as configured by SoftSSIConfigSet().  For example, if the
+//! \note The upper 32 - N bits of the \e ui32Data are discarded, where N is
+//! the data width as configured by SoftSSIConfigSet().  For example, if the
 //! interface is configured for 8-bit data width, the upper 24 bits of
-//! \e ulData are discarded.
+//! \e ui32Data are discarded.
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftSSIDataPut(tSoftSSI *pSSI, unsigned long ulData)
+SoftSSIDataPut(tSoftSSI *psSSI, uint32_t ui32Data)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Wait until there is space.
     //
-    usTemp = pSSI->usTxBufferWrite + 1;
-    if(usTemp == pSSI->usTxBufferLen)
+    ui16Temp = psSSI->ui16TxBufferWrite + 1;
+    if(ui16Temp == psSSI->ui16TxBufferLen)
     {
-        usTemp = 0;
+        ui16Temp = 0;
     }
-    while(usTemp == *(volatile unsigned short *)(&(pSSI->usTxBufferRead)))
+    while(ui16Temp == *(volatile uint16_t *)(&(psSSI->ui16TxBufferRead)))
     {
     }
 
     //
     // Write the data to the SoftSSI.
     //
-    pSSI->pusTxBuffer[pSSI->usTxBufferWrite] = ulData;
-    pSSI->usTxBufferWrite = usTemp;
+    psSSI->pui16TxBuffer[psSSI->ui16TxBufferWrite] = ui32Data;
+    psSSI->ui16TxBufferWrite = ui16Temp;
 
     //
     // See if a transmit FIFO "interrupt" needs to be cleared.
     //
-    SoftSSITxInt(pSSI);
+    SoftSSITxInt(psSSI);
 }
 
 //*****************************************************************************
 //
 //! Puts a data element into the SoftSSI transmit FIFO.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulData is the data to be transmitted over the SoftSSI interface.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32Data is the data to be transmitted over the SoftSSI interface.
 //!
 //! This function places the supplied data into the transmit FIFO of the
 //! specified SoftSSI module.  If there is no space in the FIFO, then this
 //! function returns a zero.
 //!
-//! \note The upper 32 - N bits of the \e ulData are discarded, where N is the
-//! data width as configured by SoftSSIConfigSet().  For example, if the
+//! \note The upper 32 - N bits of the \e ui32Data are discarded, where N is
+//! the data width as configured by SoftSSIConfigSet().  For example, if the
 //! interface is configured for 8-bit data width, the upper 24 bits of
-//! \e ulData are discarded.
+//! \e ui32Data are discarded.
 //!
 //! \return Returns the number of elements written to the SSI transmit FIFO.
 //
 //*****************************************************************************
-long
-SoftSSIDataPutNonBlocking(tSoftSSI *pSSI, unsigned long ulData)
+int32_t
+SoftSSIDataPutNonBlocking(tSoftSSI *psSSI, uint32_t ui32Data)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the values of the write pointer once incremented.
     //
-    usTemp = pSSI->usTxBufferWrite + 1;
-    if(usTemp == pSSI->usTxBufferLen)
+    ui16Temp = psSSI->ui16TxBufferWrite + 1;
+    if(ui16Temp == psSSI->ui16TxBufferLen)
     {
-        usTemp = 0;
+        ui16Temp = 0;
     }
 
     //
     // Check for space to write.
     //
-    if(usTemp != pSSI->usTxBufferRead)
+    if(ui16Temp != psSSI->ui16TxBufferRead)
     {
-        pSSI->pusTxBuffer[pSSI->usTxBufferWrite] = ulData;
-        pSSI->usTxBufferWrite = usTemp;
-        SoftSSITxInt(pSSI);
+        psSSI->pui16TxBuffer[psSSI->ui16TxBufferWrite] = ui32Data;
+        psSSI->ui16TxBufferWrite = ui16Temp;
+        SoftSSITxInt(psSSI);
         return(1);
     }
     else
@@ -960,85 +967,85 @@ SoftSSIDataPutNonBlocking(tSoftSSI *pSSI, unsigned long ulData)
 //
 //! Gets a data element from the SoftSSI receive FIFO.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param pulData is a pointer to a storage location for data that was
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param pui32Data is a pointer to a storage location for data that was
 //! received over the SoftSSI interface.
 //!
 //! This function gets received data from the receive FIFO of the specified
 //! SoftSSI module and places that data into the location specified by the
-//! \e pulData parameter.
+//! \e pui32Data parameter.
 //!
-//! \note Only the lower N bits of the value written to \e pulData contain
+//! \note Only the lower N bits of the value written to \e pui32Data contain
 //! valid data, where N is the data width as configured by SoftSSIConfigSet().
 //! For example, if the interface is configured for 8-bit data width, only the
-//! lower 8 bits of the value written to \e pulData contain valid data.
+//! lower 8 bits of the value written to \e pui32Data contain valid data.
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftSSIDataGet(tSoftSSI *pSSI, unsigned long *pulData)
+SoftSSIDataGet(tSoftSSI *psSSI, uint32_t *pui32Data)
 {
     //
     // Wait until there is data to be read.
     //
-    while(pSSI->usRxBufferRead ==
-          *(volatile unsigned short *)(&(pSSI->usRxBufferWrite)))
+    while(psSSI->ui16RxBufferRead ==
+          *(volatile uint16_t *)(&(psSSI->ui16RxBufferWrite)))
     {
     }
 
     //
     // Read data from SoftSSI.
     //
-    *pulData = pSSI->pusRxBuffer[pSSI->usRxBufferRead];
-    pSSI->usRxBufferRead++;
-    if(pSSI->usRxBufferRead == pSSI->usRxBufferLen)
+    *pui32Data = psSSI->pui16RxBuffer[psSSI->ui16RxBufferRead];
+    psSSI->ui16RxBufferRead++;
+    if(psSSI->ui16RxBufferRead == psSSI->ui16RxBufferLen)
     {
-        pSSI->usRxBufferRead = 0;
+        psSSI->ui16RxBufferRead = 0;
     }
 
     //
     // See if a receive FIFO "interrupt" needs to be cleared.
     //
-    SoftSSIRxInt(pSSI);
+    SoftSSIRxInt(psSSI);
 }
 
 //*****************************************************************************
 //
 //! Gets a data element from the SoftSSI receive FIFO.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param pulData is a pointer to a storage location for data that was
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param pui32Data is a pointer to a storage location for data that was
 //! received over the SoftSSI interface.
 //!
 //! This function gets received data from the receive FIFO of the specified
 //! SoftSSI module and places that data into the location specified by the
-//! \e ulData parameter.  If there is no data in the FIFO, then this function
+//! \e ui32Data parameter.  If there is no data in the FIFO, then this function
 //! returns a zero.
 //!
-//! \note Only the lower N bits of the value written to \e pulData contain
+//! \note Only the lower N bits of the value written to \e pui32Data contain
 //! valid data, where N is the data width as configured by SoftSSIConfigSet().
 //! For example, if the interface is configured for 8-bit data width, only the
-//! lower 8 bits of the value written to \e pulData contain valid data.
+//! lower 8 bits of the value written to \e pui32Data contain valid data.
 //!
 //! \return Returns the number of elements read from the SoftSSI receive FIFO.
 //
 //*****************************************************************************
-long
-SoftSSIDataGetNonBlocking(tSoftSSI *pSSI, unsigned long *pulData)
+int32_t
+SoftSSIDataGetNonBlocking(tSoftSSI *psSSI, uint32_t *pui32Data)
 {
     //
     // Check for data to read.
     //
-    if(pSSI->usRxBufferRead != pSSI->usRxBufferWrite)
+    if(psSSI->ui16RxBufferRead != psSSI->ui16RxBufferWrite)
     {
-        *pulData = pSSI->pusRxBuffer[pSSI->usRxBufferRead];
-        pSSI->usRxBufferRead++;
-        if(pSSI->usRxBufferRead == pSSI->usRxBufferLen)
+        *pui32Data = psSSI->pui16RxBuffer[psSSI->ui16RxBufferRead];
+        psSSI->ui16RxBufferRead++;
+        if(psSSI->ui16RxBufferRead == psSSI->ui16RxBufferLen)
         {
-            pSSI->usRxBufferRead = 0;
+            psSSI->ui16RxBufferRead = 0;
         }
-        SoftSSIRxInt(pSSI);
+        SoftSSIRxInt(psSSI);
         return(1);
     }
     else
@@ -1051,7 +1058,7 @@ SoftSSIDataGetNonBlocking(tSoftSSI *pSSI, unsigned long *pulData)
 //
 //! Determines whether the SoftSSI transmitter is busy or not.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //!
 //! Allows the caller to determine whether all transmitted bytes have cleared
 //! the transmitter.  If \b false is returned, then the transmit FIFO is empty
@@ -1061,22 +1068,23 @@ SoftSSIDataGetNonBlocking(tSoftSSI *pSSI, unsigned long *pulData)
 //! transmissions are complete.
 //
 //*****************************************************************************
-tBoolean
-SoftSSIBusy(tSoftSSI *pSSI)
+bool
+SoftSSIBusy(tSoftSSI *psSSI)
 {
     //
     // Determine if the SSI is busy.
     //
-    return(((pSSI->ucState == SOFTSSI_STATE_IDLE) &&
-            (((pSSI->ucFlags & SOFTSSI_FLAG_ENABLE) == 0) ||
-             (pSSI->usTxBufferRead == pSSI->usTxBufferWrite))) ? false : true);
+    return(((psSSI->ui8State == SOFTSSI_STATE_IDLE) &&
+            (((psSSI->ui8Flags & SOFTSSI_FLAG_ENABLE) == 0) ||
+             (psSSI->ui16TxBufferRead == psSSI->ui16TxBufferWrite))) ? false :
+           true);
 }
 
 //*****************************************************************************
 //
 //! Sets the callback used by the SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
+//! \param psSSI specifies the SoftSSI data structure.
 //! \param pfnCallback is a pointer to the callback function.
 //!
 //! This function sets the address of the callback function that is called when
@@ -1086,21 +1094,21 @@ SoftSSIBusy(tSoftSSI *pSSI)
 //
 //*****************************************************************************
 void
-SoftSSICallbackSet(tSoftSSI *pSSI, void (*pfnCallback)(void))
+SoftSSICallbackSet(tSoftSSI *psSSI, void (*pfnCallback)(void))
 {
     //
     // Save the callback function address.
     //
-    pSSI->pfnIntCallback = pfnCallback;
+    psSSI->pfnIntCallback = pfnCallback;
 }
 
 //*****************************************************************************
 //
 //! Sets the GPIO pin to be used as the SoftSSI Fss signal.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulBase is the base address of the GPIO module.
-//! \param ucPin is the bit-packed representation of the pin to use.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32Base is the base address of the GPIO module.
+//! \param ui8Pin is the bit-packed representation of the pin to use.
 //!
 //! This function sets the GPIO pin that is used for the SoftSSI Fss signal.
 //! If there is not a GPIO pin allocated for Fss, the SoftSSI module does not
@@ -1114,18 +1122,18 @@ SoftSSICallbackSet(tSoftSSI *pSSI, void (*pfnCallback)(void))
 //
 //*****************************************************************************
 void
-SoftSSIFssGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
+SoftSSIFssGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base, uint8_t ui8Pin)
 {
     //
     // Save the base address and pin for the Fss signal.
     //
-    if(ulBase == 0)
+    if(ui32Base == 0)
     {
-        pSSI->ulFssGPIO = 0;
+        psSSI->ui32FssGPIO = 0;
     }
     else
     {
-        pSSI->ulFssGPIO = ulBase + (ucPin << 2);
+        psSSI->ui32FssGPIO = ui32Base + (ui8Pin << 2);
     }
 }
 
@@ -1133,9 +1141,9 @@ SoftSSIFssGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
 //
 //! Sets the GPIO pin to be used as the SoftSSI Clk signal.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulBase is the base address of the GPIO module.
-//! \param ucPin is the bit-packed representation of the pin to use.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32Base is the base address of the GPIO module.
+//! \param ui8Pin is the bit-packed representation of the pin to use.
 //!
 //! This function sets the GPIO pin that is used for the SoftSSI Clk signal.
 //!
@@ -1146,21 +1154,21 @@ SoftSSIFssGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
 //
 //*****************************************************************************
 void
-SoftSSIClkGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
+SoftSSIClkGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base, uint8_t ui8Pin)
 {
     //
     // Save the base address and pin for the Clk signal.
     //
-    pSSI->ulClkGPIO = ulBase + (ucPin << 2);
+    psSSI->ui32ClkGPIO = ui32Base + (ui8Pin << 2);
 }
 
 //*****************************************************************************
 //
 //! Sets the GPIO pin to be used as the SoftSSI Tx signal.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulBase is the base address of the GPIO module.
-//! \param ucPin is the bit-packed representation of the pin to use.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32Base is the base address of the GPIO module.
+//! \param ui8Pin is the bit-packed representation of the pin to use.
 //!
 //! This function sets the GPIO pin that is used for the SoftSSI Tx signal.
 //!
@@ -1171,21 +1179,21 @@ SoftSSIClkGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
 //
 //*****************************************************************************
 void
-SoftSSITxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
+SoftSSITxGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base, uint8_t ui8Pin)
 {
     //
     // Save the base address and pin for the Tx signal.
     //
-    pSSI->ulTxGPIO = ulBase + (ucPin << 2);
+    psSSI->ui32TxGPIO = ui32Base + (ui8Pin << 2);
 }
 
 //*****************************************************************************
 //
 //! Sets the GPIO pin to be used as the SoftSSI Rx signal.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param ulBase is the base address of the GPIO module.
-//! \param ucPin is the bit-packed representation of the pin to use.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param ui32Base is the base address of the GPIO module.
+//! \param ui8Pin is the bit-packed representation of the pin to use.
 //!
 //! This function sets the GPIO pin that is used for the SoftSSI Rx signal.  If
 //! there is not a GPIO pin allocated for Rx, the SoftSSI module does not read
@@ -1198,18 +1206,18 @@ SoftSSITxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
 //
 //*****************************************************************************
 void
-SoftSSIRxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
+SoftSSIRxGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base, uint8_t ui8Pin)
 {
     //
     // Save the base address and pin for the Rx signal.
     //
-    if(ulBase == 0)
+    if(ui32Base == 0)
     {
-        pSSI->ulRxGPIO = 0;
+        psSSI->ui32RxGPIO = 0;
     }
     else
     {
-        pSSI->ulRxGPIO = ulBase + (ucPin << 2);
+        psSSI->ui32RxGPIO = ui32Base + (ui8Pin << 2);
     }
 }
 
@@ -1217,9 +1225,9 @@ SoftSSIRxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
 //
 //! Sets the transmit FIFO buffer for a SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param pusTxBuffer is the address of the transmit FIFO buffer.
-//! \param usLen is the size, in 16-bit half-words, of the transmit FIFO
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param pui16TxBuffer is the address of the transmit FIFO buffer.
+//! \param ui16Len is the size, in 16-bit half-words, of the transmit FIFO
 //! buffer.
 //!
 //! This function sets the address and size of the transmit FIFO buffer and
@@ -1230,29 +1238,30 @@ SoftSSIRxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase, unsigned char ucPin)
 //
 //*****************************************************************************
 void
-SoftSSITxBufferSet(tSoftSSI *pSSI, unsigned short *pusTxBuffer,
-                   unsigned short usLen)
+SoftSSITxBufferSet(tSoftSSI *psSSI, uint16_t *pui16TxBuffer,
+                   uint16_t ui16Len)
 {
     //
     // Save the transmit FIFO buffer address and length.
     //
-    pSSI->pusTxBuffer = pusTxBuffer;
-    pSSI->usTxBufferLen = usLen;
+    psSSI->pui16TxBuffer = pui16TxBuffer;
+    psSSI->ui16TxBufferLen = ui16Len;
 
     //
     // Reset the transmit FIFO read and write pointers.
     //
-    pSSI->usTxBufferRead = 0;
-    pSSI->usTxBufferWrite = 0;
+    psSSI->ui16TxBufferRead = 0;
+    psSSI->ui16TxBufferWrite = 0;
 }
 
 //*****************************************************************************
 //
 //! Sets the receive FIFO buffer for a SoftSSI module.
 //!
-//! \param pSSI specifies the SoftSSI data structure.
-//! \param pusRxBuffer is the address of the receive FIFO buffer.
-//! \param usLen is the size, in 16-bit half-words, of the receive FIFO buffer.
+//! \param psSSI specifies the SoftSSI data structure.
+//! \param pui16RxBuffer is the address of the receive FIFO buffer.
+//! \param ui16Len is the size, in 16-bit half-words, of the receive FIFO
+//! buffer.
 //!
 //! This function sets the address and size of the receive FIFO buffer and also
 //! resets the read and write pointers, marking the receive FIFO as empty.
@@ -1264,20 +1273,20 @@ SoftSSITxBufferSet(tSoftSSI *pSSI, unsigned short *pusTxBuffer,
 //
 //*****************************************************************************
 void
-SoftSSIRxBufferSet(tSoftSSI *pSSI, unsigned short *pusRxBuffer,
-                   unsigned short usLen)
+SoftSSIRxBufferSet(tSoftSSI *psSSI, uint16_t *pui16RxBuffer,
+                   uint16_t ui16Len)
 {
     //
     // Save the receive FIFO buffer address and length.
     //
-    pSSI->pusRxBuffer = pusRxBuffer;
-    pSSI->usRxBufferLen = usLen;
+    psSSI->pui16RxBuffer = pui16RxBuffer;
+    psSSI->ui16RxBufferLen = ui16Len;
 
     //
     // Reset the receive FIFO read and write pointers.
     //
-    pSSI->usRxBufferRead = 0;
-    pSSI->usRxBufferWrite = 0;
+    psSSI->ui16RxBufferRead = 0;
+    psSSI->ui16RxBufferWrite = 0;
 }
 
 //*****************************************************************************

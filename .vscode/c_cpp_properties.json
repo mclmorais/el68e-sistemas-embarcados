@@ -361,6 +361,7 @@
             "defines": [
                 "ewarm",
                 "PART_TM4C1294NCPDT",
+                "UART_BUFFERED",
                 "__eeprom=",
                 "__flash=",
                 "__no_init=",

@@ -2,7 +2,7 @@
 //
 // cmdline.h - Prototypes for command line processing functions.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -104,10 +104,12 @@ tCmdLineEntry;
 
 //*****************************************************************************
 //
-//! This is the command table that must be provided by the application.
+//! This is the command table that must be provided by the application.  The
+//! last element of the array must be a structure whose pcCmd field contains
+//! a NULL pointer.
 //
 //*****************************************************************************
-extern tCmdLineEntry g_sCmdTable[];
+extern tCmdLineEntry g_psCmdTable[];
 
 //*****************************************************************************
 //

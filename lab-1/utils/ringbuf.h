@@ -2,7 +2,7 @@
 //
 // ringbuf.h - Defines and Macros for the ring buffer utilities.
 //
-// Copyright (c) 2008-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2008-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -47,22 +47,22 @@ typedef struct
     //
     // The ring buffer size.
     //
-    unsigned long ulSize;
+    uint32_t ui32Size;
 
     //
     // The ring buffer write index.
     //
-    volatile unsigned long ulWriteIndex;
+    volatile uint32_t ui32WriteIndex;
 
     //
     // The ring buffer read index.
     //
-    volatile unsigned long ulReadIndex;
+    volatile uint32_t ui32ReadIndex;
 
     //
     // The ring buffer.
     //
-    unsigned char *pucBuf;
+    uint8_t *pui8Buf;
 
 }
 tRingBufObject;
@@ -72,26 +72,26 @@ tRingBufObject;
 // API Function prototypes
 //
 //*****************************************************************************
-extern tBoolean RingBufFull(tRingBufObject *ptRingBuf);
-extern tBoolean RingBufEmpty(tRingBufObject *ptRingBuf);
-extern void RingBufFlush(tRingBufObject *ptRingBuf);
-extern unsigned long RingBufUsed(tRingBufObject *ptRingBuf);
-extern unsigned long RingBufFree(tRingBufObject *ptRingBuf);
-extern unsigned long RingBufContigUsed(tRingBufObject *ptRingBuf);
-extern unsigned long RingBufContigFree(tRingBufObject *ptRingBuf);
-extern unsigned long RingBufSize(tRingBufObject *ptRingBuf);
-extern unsigned char RingBufReadOne(tRingBufObject *ptRingBuf);
-extern void RingBufRead(tRingBufObject *ptRingBuf, unsigned char *pucData,
-                        unsigned long ulLength);
-extern void RingBufWriteOne(tRingBufObject *ptRingBuf, unsigned char ucData);
-extern void RingBufWrite(tRingBufObject *ptRingBuf, unsigned char *pucData,
-                         unsigned long ulLength);
-extern void RingBufAdvanceWrite(tRingBufObject *ptRingBuf,
-                                unsigned long ulNumBytes);
-extern void RingBufAdvanceRead(tRingBufObject *ptRingBuf,
-                                unsigned long ulNumBytes);
-extern void RingBufInit(tRingBufObject *ptRingBuf, unsigned char *pucBuf,
-                        unsigned long ulSize);
+extern bool RingBufFull(tRingBufObject *psRingBuf);
+extern bool RingBufEmpty(tRingBufObject *psRingBuf);
+extern void RingBufFlush(tRingBufObject *psRingBuf);
+extern uint32_t RingBufUsed(tRingBufObject *psRingBuf);
+extern uint32_t RingBufFree(tRingBufObject *psRingBuf);
+extern uint32_t RingBufContigUsed(tRingBufObject *psRingBuf);
+extern uint32_t RingBufContigFree(tRingBufObject *psRingBuf);
+extern uint32_t RingBufSize(tRingBufObject *psRingBuf);
+extern uint8_t RingBufReadOne(tRingBufObject *psRingBuf);
+extern void RingBufRead(tRingBufObject *psRingBuf, uint8_t *pui8Data,
+                        uint32_t ui32Length);
+extern void RingBufWriteOne(tRingBufObject *psRingBuf, uint8_t ui8Data);
+extern void RingBufWrite(tRingBufObject *psRingBuf, uint8_t *pui8Data,
+                         uint32_t ui32Length);
+extern void RingBufAdvanceWrite(tRingBufObject *psRingBuf,
+                                uint32_t ui32NumBytes);
+extern void RingBufAdvanceRead(tRingBufObject *psRingBuf,
+                                uint32_t ui32NumBytes);
+extern void RingBufInit(tRingBufObject *psRingBuf, uint8_t *pui8Buf,
+                        uint32_t ui32Size);
 
 //*****************************************************************************
 //

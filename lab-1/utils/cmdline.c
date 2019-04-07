@@ -2,7 +2,7 @@
 //
 // cmdline.c - Functions to help with processing command lines.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -29,6 +29,8 @@
 //
 //*****************************************************************************
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include "utils/cmdline.h"
 
@@ -43,6 +45,13 @@
 
 //*****************************************************************************
 //
+// An array to hold the pointers to the command line arguments.
+//
+//*****************************************************************************
+static char *g_ppcArgv[CMDLINE_MAX_ARGS + 1];
+
+//*****************************************************************************
+//
 //! Process a command line string into arguments and execute the command.
 //!
 //! \param pcCmdLine points to a string that contains a command line that was
@@ -54,8 +63,10 @@
 //! command function is called and all of the command line arguments are passed
 //! in the normal argc, argv form.
 //!
-//! The command table is contained in an array named <tt>g_sCmdTable</tt> which
-//! must be provided by the application.
+//! The command table is contained in an array named <tt>g_psCmdTable</tt>
+//! containing <tt>tCmdLineEntry</tt> structures which must be provided by the
+//! application.  The array must be terminated with an entry whose \b pcCmd
+//! field contains a NULL pointer.
 //!
 //! \return Returns \b CMDLINE_BAD_CMD if the command is not found,
 //! \b CMDLINE_TOO_MANY_ARGS if there are more arguments than can be parsed.
@@ -65,17 +76,16 @@
 int
 CmdLineProcess(char *pcCmdLine)
 {
-    static char *argv[CMDLINE_MAX_ARGS + 1];
     char *pcChar;
-    int argc;
-    int bFindArg = 1;
-    tCmdLineEntry *pCmdEntry;
+    uint_fast8_t ui8Argc;
+    bool bFindArg = true;
+    tCmdLineEntry *psCmdEntry;
 
     //
     // Initialize the argument counter, and point to the beginning of the
     // command line string.
     //
-    argc = 0;
+    ui8Argc = 0;
     pcChar = pcCmdLine;
 
     //
@@ -90,7 +100,7 @@ CmdLineProcess(char *pcCmdLine)
         if(*pcChar == ' ')
         {
             *pcChar = 0;
-            bFindArg = 1;
+            bFindArg = true;
         }
 
         //
@@ -110,11 +120,11 @@ CmdLineProcess(char *pcCmdLine)
                 // reached, then save the pointer to the start of this new arg
                 // in the argv array, and increment the count of args, argc.
                 //
-                if(argc < CMDLINE_MAX_ARGS)
+                if(ui8Argc < CMDLINE_MAX_ARGS)
                 {
-                    argv[argc] = pcChar;
-                    argc++;
-                    bFindArg = 0;
+                    g_ppcArgv[ui8Argc] = pcChar;
+                    ui8Argc++;
+                    bFindArg = false;
                 }
 
                 //
@@ -137,34 +147,34 @@ CmdLineProcess(char *pcCmdLine)
     //
     // If one or more arguments was found, then process the command.
     //
-    if(argc)
+    if(ui8Argc)
     {
         //
         // Start at the beginning of the command table, to look for a matching
         // command.
         //
-        pCmdEntry = &g_sCmdTable[0];
+        psCmdEntry = &g_psCmdTable[0];
 
         //
         // Search through the command table until a null command string is
         // found, which marks the end of the table.
         //
-        while(pCmdEntry->pcCmd)
+        while(psCmdEntry->pcCmd)
         {
             //
             // If this command entry command string matches argv[0], then call
             // the function for this command, passing the command line
             // arguments.
             //
-            if(!strcmp(argv[0], pCmdEntry->pcCmd))
+            if(!strcmp(g_ppcArgv[0], psCmdEntry->pcCmd))
             {
-                return(pCmdEntry->pfnCmd(argc, argv));
+                return(psCmdEntry->pfnCmd(ui8Argc, g_ppcArgv));
             }
 
             //
             // Not found, so advance to the next entry.
             //
-            pCmdEntry++;
+            psCmdEntry++;
         }
     }
 

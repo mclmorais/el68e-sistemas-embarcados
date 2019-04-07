@@ -2,7 +2,7 @@
 //
 // uartstdio.h - Prototypes for the UART console functions.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,12 +18,14 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
 #ifndef __UARTSTDIO_H__
 #define __UARTSTDIO_H__
+
+#include <stdarg.h>
 
 //*****************************************************************************
 //
@@ -56,21 +58,20 @@ extern "C"
 // Prototypes for the APIs.
 //
 //*****************************************************************************
-extern void UARTStdioConfig(unsigned long ulPort, unsigned long ulBaud,
-                            unsigned long ulSrcClock);
-extern void UARTStdioInit(unsigned long ulPort);
-extern void UARTStdioInitExpClk(unsigned long ulPort, unsigned long ulBaud);
-extern int UARTgets(char *pcBuf, unsigned long ulLen);
+extern void UARTStdioConfig(uint32_t ui32Port, uint32_t ui32Baud,
+                            uint32_t ui32SrcClock);
+extern int UARTgets(char *pcBuf, uint32_t ui32Len);
 extern unsigned char UARTgetc(void);
 extern void UARTprintf(const char *pcString, ...);
-extern int UARTwrite(const char *pcBuf, unsigned long ulLen);
+extern void UARTvprintf(const char *pcString, va_list vaArgP);
+extern int UARTwrite(const char *pcBuf, uint32_t ui32Len);
 #ifdef UART_BUFFERED
 extern int UARTPeek(unsigned char ucChar);
-extern void UARTFlushTx(tBoolean bDiscard);
+extern void UARTFlushTx(bool bDiscard);
 extern void UARTFlushRx(void);
 extern int UARTRxBytesAvail(void);
 extern int UARTTxBytesFree(void);
-extern void UARTEchoSet(tBoolean bEnable);
+extern void UARTEchoSet(bool bEnable);
 #endif
 
 //*****************************************************************************

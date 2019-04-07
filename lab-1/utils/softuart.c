@@ -2,7 +2,7 @@
 //
 // softuart.c - Driver for the SoftUART.
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -29,6 +29,8 @@
 //
 //*****************************************************************************
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
@@ -89,7 +91,7 @@
 
 //*****************************************************************************
 //
-// The flags in the SoftUART ucFlags structure member.
+// The flags in the SoftUART ui8Flags structure member.
 //
 //*****************************************************************************
 #define SOFTUART_FLAG_ENABLE    0x01
@@ -97,7 +99,7 @@
 
 //*****************************************************************************
 //
-// The flags in the SoftUART ucRxFlags structure member.
+// The flags in the SoftUART ui8RxFlags structure member.
 //
 //*****************************************************************************
 #define SOFTUART_RXFLAG_OE      0x08
@@ -107,8 +109,8 @@
 
 //*****************************************************************************
 //
-// Additional internal configuration stored in the SoftUART usConfig structure
-// member.
+// Additional internal configuration stored in the SoftUART ui16Config
+// structure member.
 //
 //*****************************************************************************
 #define SOFTUART_CONFIG_BASE_M  0x00ff
@@ -132,7 +134,7 @@
 // by looking at bit N % 32 of word N / 32.
 //
 //*****************************************************************************
-static unsigned long g_pulParityOdd[] =
+static uint32_t g_pui32ParityOdd[] =
 {
     0x69969669, 0x96696996, 0x96696996, 0x69969669,
     0x96696996, 0x69969669, 0x69969669, 0x96696996
@@ -142,7 +144,7 @@ static unsigned long g_pulParityOdd[] =
 //
 //! Initializes the SoftUART module.
 //!
-//! \param pUART specifies the soft UART data structure.
+//! \param psUART specifies the soft UART data structure.
 //!
 //! This function initializes the data structure for the SoftUART module,
 //! putting it into the default configuration.
@@ -151,32 +153,32 @@ static unsigned long g_pulParityOdd[] =
 //
 //*****************************************************************************
 void
-SoftUARTInit(tSoftUART *pUART)
+SoftUARTInit(tSoftUART *psUART)
 {
     //
     // Clear the SoftUART data structure.
     //
-    memset(pUART, 0, sizeof(tSoftUART));
+    memset(psUART, 0, sizeof(tSoftUART));
 
     //
     // Set the default transmit and receive buffer interrupt level.
     //
-    pUART->usConfig = SOFTUART_CONFIG_TXLVL_4 | SOFTUART_CONFIG_RXLVL_4;
+    psUART->ui16Config = SOFTUART_CONFIG_TXLVL_4 | SOFTUART_CONFIG_RXLVL_4;
 }
 
 //*****************************************************************************
 //
 //! Sets the configuration of a SoftUART module.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulConfig is the data format for the port (number of data bits,
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32Config is the data format for the port (number of data bits,
 //! number of stop bits, and parity).
 //!
 //! This function configures the SoftUART for operation in the specified data
-//! format, as specified in the \e ulConfig parameter.
+//! format, as specified in the \e ui32Config parameter.
 //!
-//! The \e ulConfig parameter is the logical OR of three values: the number of
-//! data bits, the number of stop bits, and the parity.
+//! The \e ui32Config parameter is the logical OR of three values: the number
+//! of data bits, the number of stop bits, and the parity.
 //! \b SOFTUART_CONFIG_WLEN_8, \b SOFTUART_CONFIG_WLEN_7,
 //! \b SOFTUART_CONFIG_WLEN_6, and \b SOFTUART_CONFIG_WLEN_5 select from eight
 //! to five data bits per byte (respectively).  \b SOFTUART_CONFIG_STOP_ONE and
@@ -191,85 +193,85 @@ SoftUARTInit(tSoftUART *pUART)
 //
 //*****************************************************************************
 void
-SoftUARTConfigSet(tSoftUART *pUART, unsigned long ulConfig)
+SoftUARTConfigSet(tSoftUART *psUART, uint32_t ui32Config)
 {
     //
     // See if a GPIO pin has been set for Tx.
     //
-    if(pUART->ulTxGPIO != 0)
+    if(psUART->ui32TxGPIO != 0)
     {
         //
         // Configure the Tx pin.
         //
-        MAP_GPIOPinTypeGPIOOutput(pUART->ulTxGPIO & 0xfffff000,
-                                  (pUART->ulTxGPIO & 0x00000fff) >> 2);
+        MAP_GPIOPinTypeGPIOOutput(psUART->ui32TxGPIO & 0xfffff000,
+                                  (psUART->ui32TxGPIO & 0x00000fff) >> 2);
 
         //
         // Set the Tx pin high.
         //
-        HWREG(pUART->ulTxGPIO) = 255;
+        HWREG(psUART->ui32TxGPIO) = 255;
     }
 
     //
     // See if a GPIO pin has been set for Rx.
     //
-    if(pUART->ulRxGPIOPort != 0)
+    if(psUART->ui32RxGPIOPort != 0)
     {
         //
         // Configure the Rx pin.
         //
-        MAP_GPIOPinTypeGPIOInput(pUART->ulRxGPIOPort, pUART->ucRxPin);
+        MAP_GPIOPinTypeGPIOInput(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
 
         //
         // Set the Rx pin to generate an interrupt on the next falling edge.
         //
-        MAP_GPIOIntTypeSet(pUART->ulRxGPIOPort, pUART->ucRxPin,
+        MAP_GPIOIntTypeSet(psUART->ui32RxGPIOPort, psUART->ui8RxPin,
                            GPIO_FALLING_EDGE);
 
         //
         // Enable the Rx pin interrupt.
         //
-        MAP_GPIOPinIntClear(pUART->ulRxGPIOPort, pUART->ucRxPin);
-        MAP_GPIOPinIntEnable(pUART->ulRxGPIOPort, pUART->ucRxPin);
+        GPIOIntClear(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
+        GPIOIntEnable(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
     }
 
     //
     // Make sure that the transmit and receive buffers are empty.
     //
-    pUART->usTxBufferRead = 0;
-    pUART->usTxBufferWrite = 0;
-    pUART->usRxBufferRead = 0;
-    pUART->usRxBufferWrite = 0;
+    psUART->ui16TxBufferRead = 0;
+    psUART->ui16TxBufferWrite = 0;
+    psUART->ui16RxBufferRead = 0;
+    psUART->ui16RxBufferWrite = 0;
 
     //
     // Save the data format.
     //
-    pUART->usConfig = ((pUART->usConfig & SOFTUART_CONFIG_EXT_M) |
-                       (ulConfig & SOFTUART_CONFIG_BASE_M));
+    psUART->ui16Config = ((psUART->ui16Config & SOFTUART_CONFIG_EXT_M) |
+                          (ui32Config & SOFTUART_CONFIG_BASE_M));
 
     //
     // Enable the SoftUART module.
     //
-    pUART->ucFlags |= SOFTUART_FLAG_ENABLE;
+    psUART->ui8Flags |= SOFTUART_FLAG_ENABLE;
 
     //
     // The next value to be written to the Tx pin is one since the SoftUART is
     // idle.
     //
-    pUART->ucTxNext = 255;
+    psUART->ui8TxNext = 255;
 
     //
     // Start the SoftUART state machines in the idle state.
     //
-    pUART->ucTxState = SOFTUART_TXSTATE_IDLE;
-    pUART->ucRxState = SOFTUART_RXSTATE_IDLE;
+    psUART->ui8TxState = SOFTUART_TXSTATE_IDLE;
+    psUART->ui8RxState = SOFTUART_RXSTATE_IDLE;
 }
 
 //*****************************************************************************
 //
 //! Performs the periodic update of the SoftUART transmitter.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function performs the periodic, time-based updates to the SoftUART
 //! transmitter.  The transmission of data from the SoftUART is performed by
@@ -283,9 +285,9 @@ SoftUARTConfigSet(tSoftUART *pUART, unsigned long ulConfig)
 //
 //*****************************************************************************
 void
-SoftUARTTxTimerTick(tSoftUART *pUART)
+SoftUARTTxTimerTick(tSoftUART *psUART)
 {
-    unsigned long ulTemp;
+    uint32_t ui32Temp;
 
     //
     // Write the next value to the Tx data line.  This value was computed on
@@ -293,12 +295,12 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
     // edges (which is important since a UART connection does not contain a
     // clock signal).
     //
-    HWREG(pUART->ulTxGPIO) = pUART->ucTxNext;
+    HWREG(psUART->ui32TxGPIO) = psUART->ui8TxNext;
 
     //
     // Determine the current state of the state machine.
     //
-    switch(pUART->ucTxState)
+    switch(psUART->ui8TxState)
     {
         //
         // The state machine is idle.
@@ -308,7 +310,7 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             //
             // See if the SoftUART module is enabled.
             //
-            if(!(pUART->ucFlags & SOFTUART_FLAG_ENABLE))
+            if(!(psUART->ui8Flags & SOFTUART_FLAG_ENABLE))
             {
                 //
                 // The SoftUART module is not enabled, so do nothing and stay
@@ -320,33 +322,33 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             //
             // See if the break signal should be asserted.
             //
-            else if(pUART->ucFlags & SOFTUART_FLAG_TXBREAK)
+            else if(psUART->ui8Flags & SOFTUART_FLAG_TXBREAK)
             {
                 //
                 // The data line should be driven low while in the break state.
                 //
-                pUART->ucTxNext = 0;
+                psUART->ui8TxNext = 0;
 
                 //
                 // Move to the break state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_BREAK;
+                psUART->ui8TxState = SOFTUART_TXSTATE_BREAK;
             }
 
             //
             // Otherwise, see if there is data in the transmit buffer.
             //
-            else if(pUART->usTxBufferRead != pUART->usTxBufferWrite)
+            else if(psUART->ui16TxBufferRead != psUART->ui16TxBufferWrite)
             {
                 //
                 // The data line should be driven low to indicate a start bit.
                 //
-                pUART->ucTxNext = 0;
+                psUART->ui8TxNext = 0;
 
                 //
                 // Move to the start bit state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_START;
+                psUART->ui8TxState = SOFTUART_TXSTATE_START;
             }
 
             //
@@ -363,18 +365,18 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             //
             // Get the next byte to be transmitted.
             //
-            pUART->ucTxData = pUART->pucTxBuffer[pUART->usTxBufferRead];
+            psUART->ui8TxData = psUART->pui8TxBuffer[psUART->ui16TxBufferRead];
 
             //
             // The next value to be written to the data line is the LSB of the
             // next data byte.
             //
-            pUART->ucTxNext = (pUART->ucTxData & 1) ? 255 : 0;
+            psUART->ui8TxNext = (psUART->ui8TxData & 1) ? 255 : 0;
 
             //
             // Move to the data bit 0 state.
             //
-            pUART->ucTxState = SOFTUART_TXSTATE_DATA_0;
+            psUART->ui8TxState = SOFTUART_TXSTATE_DATA_0;
 
             //
             // This state has been handled.
@@ -396,13 +398,13 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             // The next value to be written to the data line is the next bit of
             // the data byte.
             //
-            pUART->ucTxNext =
-                (pUART->ucTxData & (1 << pUART->ucTxState)) ? 255 : 0;
+            psUART->ui8TxNext =
+                (psUART->ui8TxData & (1 << psUART->ui8TxState)) ? 255 : 0;
 
             //
             // Advance to the next state.
             //
-            pUART->ucTxState++;
+            psUART->ui8TxState++;
 
             //
             // This state has been handled.
@@ -425,40 +427,40 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             // See if the bit that was just transferred is the last bit of the
             // data byte (based on the configuration of the SoftUART).
             //
-            if(((pUART->usConfig & SOFTUART_CONFIG_WLEN_MASK) >>
+            if(((psUART->ui16Config & SOFTUART_CONFIG_WLEN_MASK) >>
                 SOFTUART_CONFIG_WLEN_S) ==
-               (pUART->ucTxState - SOFTUART_TXSTATE_DATA_4))
+               (psUART->ui8TxState - SOFTUART_TXSTATE_DATA_4))
             {
                 //
                 // See if parity is enabled.
                 //
-                if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) !=
+                if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) !=
                    SOFTUART_CONFIG_PAR_NONE)
                 {
                     //
                     // See if the parity is set to one.
                     //
-                    if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) ==
+                    if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) ==
                        SOFTUART_CONFIG_PAR_ONE)
                     {
                         //
                         // The next value to be written to the data line is
                         // one.
                         //
-                        pUART->ucTxNext = 255;
+                        psUART->ui8TxNext = 255;
                     }
 
                     //
                     // Otherwise, see if the parity is set to zero.
                     //
-                    else if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) ==
+                    else if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) ==
                             SOFTUART_CONFIG_PAR_ZERO)
                     {
                         //
                         // The next value to be written to the data line is
                         // zero.
                         //
-                        pUART->ucTxNext = 0;
+                        psUART->ui8TxNext = 0;
                     }
 
                     //
@@ -469,25 +471,25 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
                         //
                         // Find the odd parity for the data byte.
                         //
-                        pUART->ucTxNext =
-                            ((g_pulParityOdd[pUART->ucTxData >> 5] &
-                              (1 << (pUART->ucTxData & 31))) ? 255 : 0);
+                        psUART->ui8TxNext =
+                            ((g_pui32ParityOdd[psUART->ui8TxData >> 5] &
+                              (1 << (psUART->ui8TxData & 31))) ? 255 : 0);
 
                         //
                         // If the parity is set to even, then invert the
                         // parity just computed (making it even parity).
                         //
-                        if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) ==
+                        if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) ==
                            SOFTUART_CONFIG_PAR_EVEN)
                         {
-                            pUART->ucTxNext ^= 255;
+                            psUART->ui8TxNext ^= 255;
                         }
                     }
 
                     //
                     // Advance to the parity state.
                     //
-                    pUART->ucTxState = SOFTUART_TXSTATE_PARITY;
+                    psUART->ui8TxState = SOFTUART_TXSTATE_PARITY;
                 }
 
                 //
@@ -499,25 +501,25 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
                     // The next value to write to the data line is the stop
                     // bit.
                     //
-                    pUART->ucTxNext = 255;
+                    psUART->ui8TxNext = 255;
 
                     //
                     // See if there are one or two stop bits.
                     //
-                    if((pUART->usConfig & SOFTUART_CONFIG_STOP_MASK) ==
+                    if((psUART->ui16Config & SOFTUART_CONFIG_STOP_MASK) ==
                        SOFTUART_CONFIG_STOP_TWO)
                     {
                         //
                         // Advance to the two stop bits state.
                         //
-                        pUART->ucTxState = SOFTUART_TXSTATE_STOP_0;
+                        psUART->ui8TxState = SOFTUART_TXSTATE_STOP_0;
                     }
                     else
                     {
                         //
                         // Advance to the one stop bit state.
                         //
-                        pUART->ucTxState = SOFTUART_TXSTATE_STOP_1;
+                        psUART->ui8TxState = SOFTUART_TXSTATE_STOP_1;
                     }
                 }
             }
@@ -531,13 +533,13 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
                 // The next value to be written to the data line is the next
                 // bit of the data byte.
                 //
-                pUART->ucTxNext =
-                    (pUART->ucTxData & (1 << pUART->ucTxState)) ? 255 : 0;
+                psUART->ui8TxNext =
+                    (psUART->ui8TxData & (1 << psUART->ui8TxState)) ? 255 : 0;
 
                 //
                 // Advance to the next state.
                 //
-                pUART->ucTxState++;
+                psUART->ui8TxState++;
             }
 
             //
@@ -554,25 +556,25 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             //
             // The next value to write to the data line is the stop bit.
             //
-            pUART->ucTxNext = 255;
+            psUART->ui8TxNext = 255;
 
             //
             // See if there are one or two stop bits.
             //
-            if((pUART->usConfig & SOFTUART_CONFIG_STOP_MASK) ==
+            if((psUART->ui16Config & SOFTUART_CONFIG_STOP_MASK) ==
                SOFTUART_CONFIG_STOP_TWO)
             {
                 //
                 // Advance to the two stop bits state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_STOP_0;
+                psUART->ui8TxState = SOFTUART_TXSTATE_STOP_0;
             }
             else
             {
                 //
                 // Advance to the one stop bit state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_STOP_1;
+                psUART->ui8TxState = SOFTUART_TXSTATE_STOP_1;
             }
 
             //
@@ -589,7 +591,7 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             //
             // Advance to the one stop bit state.
             //
-            pUART->ucTxState = SOFTUART_TXSTATE_STOP_1;
+            psUART->ui8TxState = SOFTUART_TXSTATE_STOP_1;
 
             //
             // This state has been handled.
@@ -606,76 +608,78 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             // The data byte has been completely transferred, so advance the
             // read pointer.
             //
-            pUART->usTxBufferRead++;
-            if(pUART->usTxBufferRead == pUART->usTxBufferLen)
+            psUART->ui16TxBufferRead++;
+            if(psUART->ui16TxBufferRead == psUART->ui16TxBufferLen)
             {
-                pUART->usTxBufferRead = 0;
+                psUART->ui16TxBufferRead = 0;
             }
 
             //
             // Determine the number of characters in the transmit buffer.
             //
-            if(pUART->usTxBufferRead > pUART->usTxBufferWrite)
+            if(psUART->ui16TxBufferRead > psUART->ui16TxBufferWrite)
             {
-                ulTemp = (pUART->usTxBufferLen -
-                          (pUART->usTxBufferRead - pUART->usTxBufferWrite));
+                ui32Temp = (psUART->ui16TxBufferLen -
+                            (psUART->ui16TxBufferRead -
+                             psUART->ui16TxBufferWrite));
             }
             else
             {
-                ulTemp = pUART->usTxBufferWrite - pUART->usTxBufferRead;
+                ui32Temp = (psUART->ui16TxBufferWrite -
+                            psUART->ui16TxBufferRead);
             }
 
             //
             // If the transmit buffer fullness just crossed the programmed
             // level, generate a transmit "interrupt".
             //
-            if(ulTemp == pUART->usTxBufferLevel)
+            if(ui32Temp == psUART->ui16TxBufferLevel)
             {
-                pUART->usIntStatus |= SOFTUART_INT_TX;
+                psUART->ui16IntStatus |= SOFTUART_INT_TX;
             }
 
             //
             // See if the SoftUART module is enabled.
             //
-            if(!(pUART->ucFlags & SOFTUART_FLAG_ENABLE))
+            if(!(psUART->ui8Flags & SOFTUART_FLAG_ENABLE))
             {
                 //
                 // The SoftUART module is not enabled, so do advance to the
                 // idle state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_IDLE;
+                psUART->ui8TxState = SOFTUART_TXSTATE_IDLE;
             }
 
             //
             // See if the break signal should be asserted.
             //
-            else if(pUART->ucFlags & SOFTUART_FLAG_TXBREAK)
+            else if(psUART->ui8Flags & SOFTUART_FLAG_TXBREAK)
             {
                 //
                 // The data line should be driven low while in the break state.
                 //
-                pUART->ucTxNext = 0;
+                psUART->ui8TxNext = 0;
 
                 //
                 // Move to the break state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_BREAK;
+                psUART->ui8TxState = SOFTUART_TXSTATE_BREAK;
             }
 
             //
             // Otherwise, see if there is data in the transmit buffer.
             //
-            else if(pUART->usTxBufferRead != pUART->usTxBufferWrite)
+            else if(psUART->ui16TxBufferRead != psUART->ui16TxBufferWrite)
             {
                 //
                 // The data line should be driven low to indicate a start bit.
                 //
-                pUART->ucTxNext = 0;
+                psUART->ui8TxNext = 0;
 
                 //
                 // Move to the start bit state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_START;
+                psUART->ui8TxState = SOFTUART_TXSTATE_START;
             }
 
             //
@@ -686,12 +690,12 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
                 //
                 // Assert the end of transmission "interrupt".
                 //
-                pUART->usIntStatus |= SOFTUART_INT_EOT;
+                psUART->ui16IntStatus |= SOFTUART_INT_EOT;
 
                 //
                 // Advance to the idle state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_IDLE;
+                psUART->ui8TxState = SOFTUART_TXSTATE_IDLE;
             }
 
             //
@@ -708,18 +712,18 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
             //
             // See if the break should be deasserted.
             //
-            if(!(pUART->ucFlags & SOFTUART_FLAG_ENABLE) ||
-               !(pUART->ucFlags & SOFTUART_FLAG_TXBREAK))
+            if(!(psUART->ui8Flags & SOFTUART_FLAG_ENABLE) ||
+               !(psUART->ui8Flags & SOFTUART_FLAG_TXBREAK))
             {
                 //
                 // The data line should be driven high to indicate it is idle.
                 //
-                pUART->ucTxNext = 255;
+                psUART->ui8TxNext = 255;
 
                 //
                 // Advance to the idle state.
                 //
-                pUART->ucTxState = SOFTUART_TXSTATE_IDLE;
+                psUART->ui8TxState = SOFTUART_TXSTATE_IDLE;
             }
 
             //
@@ -735,13 +739,13 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
     // asserted, this mimics the behavior of a real hardware implementation of
     // the UART peripheral.
     //
-    while(((pUART->usIntStatus & pUART->usIntMask) != 0) &&
-          (pUART->pfnIntCallback != 0))
+    while(((psUART->ui16IntStatus & psUART->ui16IntMask) != 0) &&
+          (psUART->pfnIntCallback != 0))
     {
         //
         // Call the callback function.
         //
-        pUART->pfnIntCallback();
+        psUART->pfnIntCallback();
     }
 }
 
@@ -749,7 +753,7 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
 //
 //! Handles the assertion of the receive ``interrupt''.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function is used to determine when to assert the receive ``interrupt''
 //! as a result of writing data into the receive buffer (when characters are
@@ -759,30 +763,30 @@ SoftUARTTxTimerTick(tSoftUART *pUART)
 //
 //*****************************************************************************
 static void
-SoftUARTRxWriteInt(tSoftUART *pUART)
+SoftUARTRxWriteInt(tSoftUART *psUART)
 {
-    unsigned long ulTemp;
+    uint32_t ui32Temp;
 
     //
     // Determine the number of characters in the receive buffer.
     //
-    if(pUART->usRxBufferWrite > pUART->usRxBufferRead)
+    if(psUART->ui16RxBufferWrite > psUART->ui16RxBufferRead)
     {
-        ulTemp = pUART->usRxBufferWrite - pUART->usRxBufferRead;
+        ui32Temp = psUART->ui16RxBufferWrite - psUART->ui16RxBufferRead;
     }
     else
     {
-        ulTemp = (pUART->usRxBufferLen + pUART->usRxBufferWrite -
-                  pUART->usRxBufferRead);
+        ui32Temp = (psUART->ui16RxBufferLen + psUART->ui16RxBufferWrite -
+                    psUART->ui16RxBufferRead);
     }
 
     //
     // If the receive buffer fullness just crossed the programmed level,
     // generate a receive "interrupt".
     //
-    if(ulTemp == pUART->usRxBufferLevel)
+    if(ui32Temp == psUART->ui16RxBufferLevel)
     {
-        pUART->usIntStatus |= SOFTUART_INT_RX;
+        psUART->ui16IntStatus |= SOFTUART_INT_RX;
     }
 }
 
@@ -790,7 +794,7 @@ SoftUARTRxWriteInt(tSoftUART *pUART)
 //
 //! Performs the periodic update of the SoftUART receiver.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //! \param bEdgeInt should be \b true if this function is being called because
 //! of a GPIO edge interrupt and \b false if it is being called because of a
 //! timer interrupt.
@@ -808,39 +812,39 @@ SoftUARTRxWriteInt(tSoftUART *pUART)
 //! continue to operate or \b SOFTUART_RXTIMER_END if it should be stopped.
 //
 //*****************************************************************************
-unsigned long
-SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
+uint32_t
+SoftUARTRxTick(tSoftUART *psUART, bool bEdgeInt)
 {
-    unsigned long ulPinState, ulTemp, ulRet;
+    uint32_t ui32PinState, ui32Temp, ui32Ret;
 
     //
     // Read the current state of the Rx data line.
     //
-    ulPinState = MAP_GPIOPinRead(pUART->ulRxGPIOPort, pUART->ucRxPin);
+    ui32PinState = MAP_GPIOPinRead(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
 
     //
     // The default return code inidicates that the receive timer does not need
     // to be stopped.
     //
-    ulRet = SOFTUART_RXTIMER_NOP;
+    ui32Ret = SOFTUART_RXTIMER_NOP;
 
     //
     // See if this is an edge interrupt while delaying for the receive timeout
     // interrupt.
     //
-    if(bEdgeInt && (pUART->ucRxState == SOFTUART_RXSTATE_DELAY))
+    if(bEdgeInt && (psUART->ui8RxState == SOFTUART_RXSTATE_DELAY))
     {
         //
         // The receive timeout has been cancelled since the next character has
         // started, so go to the idle state.
         //
-        pUART->ucRxState = SOFTUART_RXSTATE_IDLE;
+        psUART->ui8RxState = SOFTUART_RXSTATE_IDLE;
     }
 
     //
     // Determine the current state of the state machine.
     //
-    switch(pUART->ucRxState)
+    switch(psUART->ui8RxState)
     {
         //
         // The state machine is idle.
@@ -852,13 +856,13 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             // the GPIO edge interrupt since the remainder of the character
             // will be read using a timer tick.
             //
-            MAP_GPIOPinIntClear(pUART->ulRxGPIOPort, pUART->ucRxPin);
-            MAP_GPIOPinIntDisable(pUART->ulRxGPIOPort, pUART->ucRxPin);
+            GPIOIntClear(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
+            GPIOIntDisable(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
 
             //
             // Clear the receive data buffer.
             //
-            pUART->ucRxData = 0;
+            psUART->ui8RxData = 0;
 
             //
             // Clear all reception errors other than overrun (which is cleared
@@ -866,13 +870,13 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             // the receive buffer), and set the break error (which is cleared
             // if any non-zero bits are read during this character).
             //
-            pUART->ucRxFlags = ((pUART->ucRxFlags & SOFTUART_RXFLAG_OE) |
-                                SOFTUART_RXFLAG_BE);
+            psUART->ui8RxFlags = ((psUART->ui8RxFlags & SOFTUART_RXFLAG_OE) |
+                                  SOFTUART_RXFLAG_BE);
 
             //
             // Advance to the first data bit state.
             //
-            pUART->ucRxState = SOFTUART_RXSTATE_DATA_0;
+            psUART->ui8RxState = SOFTUART_RXSTATE_DATA_0;
 
             //
             // This state has been handled.
@@ -893,23 +897,23 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the Rx pin is high.
             //
-            if(ulPinState != 0)
+            if(ui32PinState != 0)
             {
                 //
                 // Set this bit of the received character.
                 //
-                pUART->ucRxData |= 1 << pUART->ucRxState;
+                psUART->ui8RxData |= 1 << psUART->ui8RxState;
 
                 //
                 // Clear the break error since a non-zero bit was received.
                 //
-                pUART->ucRxFlags &= ~(SOFTUART_RXFLAG_BE);
+                psUART->ui8RxFlags &= ~(SOFTUART_RXFLAG_BE);
             }
 
             //
             // Advance to the next state.
             //
-            pUART->ucRxState++;
+            psUART->ui8RxState++;
 
             //
             // This state has been handled.
@@ -931,49 +935,49 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the Rx pin is high.
             //
-            if(ulPinState != 0)
+            if(ui32PinState != 0)
             {
                 //
                 // Set this bit of the received character.
                 //
-                pUART->ucRxData |= 1 << pUART->ucRxState;
+                psUART->ui8RxData |= 1 << psUART->ui8RxState;
 
                 //
                 // Clear the break error since a non-zero bit was received.
                 //
-                pUART->ucRxFlags &= ~(SOFTUART_RXFLAG_BE);
+                psUART->ui8RxFlags &= ~(SOFTUART_RXFLAG_BE);
             }
 
             //
             // See if the bit that was just transferred is the last bit of the
             // data byte (based on the configuration of the SoftUART).
             //
-            if(((pUART->usConfig & SOFTUART_CONFIG_WLEN_MASK) >>
+            if(((psUART->ui16Config & SOFTUART_CONFIG_WLEN_MASK) >>
                 SOFTUART_CONFIG_WLEN_S) ==
-               (pUART->ucRxState - SOFTUART_RXSTATE_DATA_4))
+               (psUART->ui8RxState - SOFTUART_RXSTATE_DATA_4))
             {
                 //
                 // See if parity is enabled.
                 //
-                if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) !=
+                if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) !=
                    SOFTUART_CONFIG_PAR_NONE)
                 {
                     //
                     // Advance to the parity state.
                     //
-                    pUART->ucRxState = SOFTUART_RXSTATE_PARITY;
+                    psUART->ui8RxState = SOFTUART_RXSTATE_PARITY;
                 }
 
                 //
                 // Otherwise, see if there are one or two stop bits.
                 //
-                else if((pUART->usConfig & SOFTUART_CONFIG_STOP_MASK) ==
+                else if((psUART->ui16Config & SOFTUART_CONFIG_STOP_MASK) ==
                         SOFTUART_CONFIG_STOP_TWO)
                 {
                     //
                     // Advance to the two stop bits state.
                     //
-                    pUART->ucRxState = SOFTUART_RXSTATE_STOP_0;
+                    psUART->ui8RxState = SOFTUART_RXSTATE_STOP_0;
                 }
 
                 //
@@ -981,7 +985,7 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
                 //
                 else
                 {
-                    pUART->ucRxState = SOFTUART_RXSTATE_STOP_1;
+                    psUART->ui8RxState = SOFTUART_RXSTATE_STOP_1;
                 }
             }
 
@@ -993,7 +997,7 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
                 //
                 // Advance to the next state.
                 //
-                pUART->ucRxState++;
+                psUART->ui8RxState++;
             }
 
             //
@@ -1010,25 +1014,25 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the parity is set to one.
             //
-            if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) ==
+            if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) ==
                SOFTUART_CONFIG_PAR_ONE)
             {
                 //
                 // Set the expected parity to one.
                 //
-                ulTemp = pUART->ucRxPin;
+                ui32Temp = psUART->ui8RxPin;
             }
 
             //
             // Otherwise, see if the parity is set to zero.
             //
-            else if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) ==
+            else if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) ==
                     SOFTUART_CONFIG_PAR_ZERO)
             {
                 //
                 // Set the expected parity to zero.
                 //
-                ulTemp = 0;
+                ui32Temp = 0;
             }
 
             //
@@ -1039,60 +1043,60 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
                 //
                 // Find the odd parity for the data byte.
                 //
-                ulTemp = ((g_pulParityOdd[pUART->ucRxData >> 5] &
-                           (1 << (pUART->ucRxData & 31))) ?
-                          pUART->ucRxPin : 0);
+                ui32Temp = ((g_pui32ParityOdd[psUART->ui8RxData >> 5] &
+                             (1 << (psUART->ui8RxData & 31))) ?
+                            psUART->ui8RxPin : 0);
 
                 //
                 // If the parity is set to even, then invert the parity just
                 // computed (making it even parity).
                 //
-                if((pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) ==
+                if((psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) ==
                    SOFTUART_CONFIG_PAR_EVEN)
                 {
-                    ulTemp ^= pUART->ucRxPin;
+                    ui32Temp ^= psUART->ui8RxPin;
                 }
             }
 
             //
             // See if the pin state matches the expected parity.
             //
-            if(ulPinState != ulTemp)
+            if(ui32PinState != ui32Temp)
             {
                 //
                 // The parity does not match, so set the parity error flag.
                 //
-                pUART->ucRxFlags |= SOFTUART_RXFLAG_PE;
+                psUART->ui8RxFlags |= SOFTUART_RXFLAG_PE;
             }
 
             //
             // See if the Rx pin is high.
             //
-            if(ulPinState != 0)
+            if(ui32PinState != 0)
             {
                 //
                 // Clear the break error since a non-zero bit was received.
                 //
-                pUART->ucRxFlags &= ~(SOFTUART_RXFLAG_BE);
+                psUART->ui8RxFlags &= ~(SOFTUART_RXFLAG_BE);
             }
 
             //
             // See if there are one or two stop bits.
             //
-            if((pUART->usConfig & SOFTUART_CONFIG_STOP_MASK) ==
+            if((psUART->ui16Config & SOFTUART_CONFIG_STOP_MASK) ==
                SOFTUART_CONFIG_STOP_TWO)
             {
                 //
                 // Advance to the two stop bits state.
                 //
-                pUART->ucRxState = SOFTUART_RXSTATE_STOP_0;
+                psUART->ui8RxState = SOFTUART_RXSTATE_STOP_0;
             }
             else
             {
                 //
                 // Advance to the one stop bit state.
                 //
-                pUART->ucRxState = SOFTUART_RXSTATE_STOP_1;
+                psUART->ui8RxState = SOFTUART_RXSTATE_STOP_1;
             }
 
             //
@@ -1109,25 +1113,25 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the Rx pin is low.
             //
-            if(ulPinState == 0)
+            if(ui32PinState == 0)
             {
                 //
                 // Since the Rx pin is low, there is a framing error.
                 //
-                pUART->ucRxFlags |= SOFTUART_RXFLAG_FE;
+                psUART->ui8RxFlags |= SOFTUART_RXFLAG_FE;
             }
             else
             {
                 //
                 // Clear the break error since a non-zero bit was received.
                 //
-                pUART->ucRxFlags &= ~(SOFTUART_RXFLAG_BE);
+                psUART->ui8RxFlags &= ~(SOFTUART_RXFLAG_BE);
             }
 
             //
             // Advance to the one stop bit state.
             //
-            pUART->ucRxState = SOFTUART_RXSTATE_STOP_1;
+            psUART->ui8RxState = SOFTUART_RXSTATE_STOP_1;
 
             //
             // This state has been handled.
@@ -1143,31 +1147,31 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the Rx pin is low.
             //
-            if(ulPinState == 0)
+            if(ui32PinState == 0)
             {
                 //
                 // Since the Rx pin is low, there is a framing error.
                 //
-                pUART->ucRxFlags |= SOFTUART_RXFLAG_FE;
+                psUART->ui8RxFlags |= SOFTUART_RXFLAG_FE;
             }
             else
             {
                 //
                 // Clear the break error since a non-zero bit was received.
                 //
-                pUART->ucRxFlags &= ~(SOFTUART_RXFLAG_BE);
+                psUART->ui8RxFlags &= ~(SOFTUART_RXFLAG_BE);
             }
 
             //
             // See if the break error is still asserted (meaning that every bit
             // received was zero).
             //
-            if(pUART->ucRxFlags & SOFTUART_RXFLAG_BE)
+            if(psUART->ui8RxFlags & SOFTUART_RXFLAG_BE)
             {
                 //
                 // Since every bit was zero, advance to the break state.
                 //
-                pUART->ucRxState = SOFTUART_RXSTATE_BREAK;
+                psUART->ui8RxState = SOFTUART_RXSTATE_BREAK;
 
                 //
                 // This state has been handled.
@@ -1178,32 +1182,32 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // Compute the value of the write pointer advanced by one.
             //
-            ulTemp = pUART->usRxBufferWrite + 1;
-            if(ulTemp == pUART->usRxBufferLen)
+            ui32Temp = psUART->ui16RxBufferWrite + 1;
+            if(ui32Temp == psUART->ui16RxBufferLen)
             {
-                ulTemp = 0;
+                ui32Temp = 0;
             }
 
             //
             // See if there is space in the receive buffer.
             //
-            if(ulTemp == pUART->usRxBufferRead)
+            if(ui32Temp == psUART->ui16RxBufferRead)
             {
                 //
                 // Set the overrun error flag.  This will remain set until a
                 // new character can be placed into the receive buffer, which
                 // will then be given this status.
                 //
-                pUART->ucRxFlags |= SOFTUART_RXFLAG_OE;
+                psUART->ui8RxFlags |= SOFTUART_RXFLAG_OE;
 
                 //
                 // Set the receive overrun "interrupt" and status if it is not
                 // already set.
                 //
-                if(!(pUART->ucRxStatus & SOFTUART_RXERROR_OVERRUN))
+                if(!(psUART->ui8RxStatus & SOFTUART_RXERROR_OVERRUN))
                 {
-                    pUART->ucRxStatus |= SOFTUART_RXERROR_OVERRUN;
-                    pUART->usIntStatus |= SOFTUART_INT_OE;
+                    psUART->ui8RxStatus |= SOFTUART_RXERROR_OVERRUN;
+                    psUART->ui16IntStatus |= SOFTUART_INT_OE;
                 }
             }
 
@@ -1216,60 +1220,60 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
                 // Write this data byte, along with the receive flags, into the
                 // receive buffer.
                 //
-                pUART->pusRxBuffer[pUART->usRxBufferWrite] =
-                    pUART->ucRxData | (pUART->ucRxFlags << 8);
+                psUART->pui16RxBuffer[psUART->ui16RxBufferWrite] =
+                    psUART->ui8RxData | (psUART->ui8RxFlags << 8);
 
                 //
                 // Advance the write pointer.
                 //
-                pUART->usRxBufferWrite = ulTemp;
+                psUART->ui16RxBufferWrite = ui32Temp;
 
                 //
                 // Clear the receive flags, most importantly the overrun flag
                 // since it was just written into the receive buffer.
                 //
-                pUART->ucRxFlags = 0;
+                psUART->ui8RxFlags = 0;
 
                 //
                 // Assert the receive "interrupt" if appropriate.
                 //
-                SoftUARTRxWriteInt(pUART);
+                SoftUARTRxWriteInt(psUART);
             }
 
             //
             // See if this character had a parity error.
             //
-            if(pUART->ucRxFlags & SOFTUART_RXFLAG_PE)
+            if(psUART->ui8RxFlags & SOFTUART_RXFLAG_PE)
             {
                 //
                 // Assert the parity error "interrupt".
                 //
-                pUART->usIntStatus |= SOFTUART_INT_PE;
+                psUART->ui16IntStatus |= SOFTUART_INT_PE;
             }
 
             //
             // See if this character had a framing error.
             //
-            if(pUART->ucRxFlags & SOFTUART_RXFLAG_FE)
+            if(psUART->ui8RxFlags & SOFTUART_RXFLAG_FE)
             {
                 //
                 // Assert the framing error "interrupt".
                 //
-                pUART->usIntStatus |= SOFTUART_INT_FE;
+                psUART->ui16IntStatus |= SOFTUART_INT_FE;
             }
 
             //
             // Enable the falling edge interrupt on the Rx pin so that the next
             // start bit can be detected.
             //
-            MAP_GPIOPinIntClear(pUART->ulRxGPIOPort, pUART->ucRxPin);
-            MAP_GPIOPinIntEnable(pUART->ulRxGPIOPort, pUART->ucRxPin);
+            GPIOIntClear(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
+            GPIOIntEnable(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
 
             //
             // Advance to the receive timeout delay state.
             //
-            pUART->ucRxData = 0;
-            pUART->ucRxState = SOFTUART_RXSTATE_DELAY;
+            psUART->ui8RxData = 0;
+            psUART->ui8RxState = SOFTUART_RXSTATE_DELAY;
 
             //
             // This state has been handled.
@@ -1285,43 +1289,43 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the Rx pin is high.
             //
-            if(ulPinState != 0)
+            if(ui32PinState != 0)
             {
                 //
                 // Clear the break error since a non-zero bit was received.
                 //
-                pUART->ucRxFlags &= ~(SOFTUART_RXFLAG_BE);
+                psUART->ui8RxFlags &= ~(SOFTUART_RXFLAG_BE);
             }
 
             //
             // Compute the value of the write pointer advanced by one.
             //
-            ulTemp = pUART->usRxBufferWrite + 1;
-            if(ulTemp == pUART->usRxBufferLen)
+            ui32Temp = psUART->ui16RxBufferWrite + 1;
+            if(ui32Temp == psUART->ui16RxBufferLen)
             {
-                ulTemp = 0;
+                ui32Temp = 0;
             }
 
             //
             // See if there is space in the receive buffer.
             //
-            if(ulTemp == pUART->usRxBufferRead)
+            if(ui32Temp == psUART->ui16RxBufferRead)
             {
                 //
                 // Set the overrun error flag.  This will remain set until a
                 // new character can be placed into the receive buffer, which
                 // will then be given this status.
                 //
-                pUART->ucRxFlags |= SOFTUART_RXFLAG_OE;
+                psUART->ui8RxFlags |= SOFTUART_RXFLAG_OE;
 
                 //
                 // Set the receive overrun "interrupt" and status if it is not
                 // already set.
                 //
-                if(!(pUART->ucRxStatus & SOFTUART_RXERROR_OVERRUN))
+                if(!(psUART->ui8RxStatus & SOFTUART_RXERROR_OVERRUN))
                 {
-                    pUART->ucRxStatus |= SOFTUART_RXERROR_OVERRUN;
-                    pUART->usIntStatus |= SOFTUART_INT_OE;
+                    psUART->ui8RxStatus |= SOFTUART_RXERROR_OVERRUN;
+                    psUART->ui16IntStatus |= SOFTUART_INT_OE;
                 }
             }
 
@@ -1334,65 +1338,65 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
                 // Write this data byte, along with the receive flags, into the
                 // receive buffer.
                 //
-                pUART->pusRxBuffer[pUART->usRxBufferWrite] =
-                    pUART->ucRxData | (pUART->ucRxFlags << 8);
+                psUART->pui16RxBuffer[psUART->ui16RxBufferWrite] =
+                    psUART->ui8RxData | (psUART->ui8RxFlags << 8);
 
                 //
                 // Advance the write pointer.
                 //
-                pUART->usRxBufferWrite = ulTemp;
+                psUART->ui16RxBufferWrite = ui32Temp;
 
                 //
                 // Clear the receive flags, most importantly the overrun flag
                 // since it was just written into the receive buffer.
                 //
-                pUART->ucRxFlags = 0;
+                psUART->ui8RxFlags = 0;
 
                 //
                 // Assert the receive "interrupt" if appropriate.
                 //
-                SoftUARTRxWriteInt(pUART);
+                SoftUARTRxWriteInt(psUART);
             }
 
             //
             // See if this was a break error.
             //
-            if(pUART->ucRxFlags & SOFTUART_RXFLAG_BE)
+            if(psUART->ui8RxFlags & SOFTUART_RXFLAG_BE)
             {
                 //
                 // Assert the break error "interrupt".
                 //
-                pUART->usIntStatus |= SOFTUART_INT_BE;
+                psUART->ui16IntStatus |= SOFTUART_INT_BE;
             }
 
             //
             // See if this character had a parity error.
             //
-            if(pUART->ucRxFlags & SOFTUART_RXFLAG_PE)
+            if(psUART->ui8RxFlags & SOFTUART_RXFLAG_PE)
             {
                 //
                 // Assert the parity error "interrupt".
                 //
-                pUART->usIntStatus |= SOFTUART_INT_PE;
+                psUART->ui16IntStatus |= SOFTUART_INT_PE;
             }
 
             //
             // Assert the framing error "interrupt".
             //
-            pUART->usIntStatus |= SOFTUART_INT_FE;
+            psUART->ui16IntStatus |= SOFTUART_INT_FE;
 
             //
             // Enable the falling edge interrupt on the Rx pin so that the next
             // start bit can be detected.
             //
-            MAP_GPIOPinIntClear(pUART->ulRxGPIOPort, pUART->ucRxPin);
-            MAP_GPIOPinIntEnable(pUART->ulRxGPIOPort, pUART->ucRxPin);
+            GPIOIntClear(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
+            GPIOIntEnable(psUART->ui32RxGPIOPort, psUART->ui8RxPin);
 
             //
             // Advance to the receive timeout delay state.
             //
-            pUART->ucRxData = 0;
-            pUART->ucRxState = SOFTUART_RXSTATE_DELAY;
+            psUART->ui8RxData = 0;
+            psUART->ui8RxState = SOFTUART_RXSTATE_DELAY;
 
             //
             // This state has been handled.
@@ -1408,17 +1412,17 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
             //
             // See if the receive timeout has expired.
             //
-            if(pUART->ucRxData++ == 32)
+            if(psUART->ui8RxData++ == 32)
             {
                 //
                 // Assert the receive timeout "interrupt".
                 //
-                pUART->usIntStatus |= SOFTUART_INT_RT;
+                psUART->ui16IntStatus |= SOFTUART_INT_RT;
 
                 //
                 // Tell the caller that the receive timer can be disabled.
                 //
-                ulRet = SOFTUART_RXTIMER_END;
+                ui32Ret = SOFTUART_RXTIMER_END;
             }
 
             //
@@ -1434,30 +1438,30 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
     // asserted, this mimics the behavior of a real hardware implementation of
     // the UART peripheral.
     //
-    while(((pUART->usIntStatus & pUART->usIntMask) != 0) &&
-          (pUART->pfnIntCallback != 0))
+    while(((psUART->ui16IntStatus & psUART->ui16IntMask) != 0) &&
+          (psUART->pfnIntCallback != 0))
     {
         //
         // Call the callback function.
         //
-        pUART->pfnIntCallback();
+        psUART->pfnIntCallback();
     }
 
     //
     // Return to the caller.
     //
-    return(ulRet);
+    return(ui32Ret);
 }
 
 //*****************************************************************************
 //
 //! Sets the type of parity.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulParity specifies the type of parity to use.
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32Parity specifies the type of parity to use.
 //!
 //! Sets the type of parity to use for transmitting and expect when receiving.
-//! The \e ulParity parameter must be one of \b SOFTUART_CONFIG_PAR_NONE,
+//! The \e ui32Parity parameter must be one of \b SOFTUART_CONFIG_PAR_NONE,
 //! \b SOFTUART_CONFIG_PAR_EVEN, \b SOFTUART_CONFIG_PAR_ODD,
 //! \b SOFTUART_CONFIG_PAR_ONE, or \b SOFTUART_CONFIG_PAR_ZERO.  The last two
 //! allow direct control of the parity bit; it is always either one or zero
@@ -1467,28 +1471,29 @@ SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt)
 //
 //*****************************************************************************
 void
-SoftUARTParityModeSet(tSoftUART *pUART, unsigned long ulParity)
+SoftUARTParityModeSet(tSoftUART *psUART, uint32_t ui32Parity)
 {
     //
     // Check the arguments.
     //
-    ASSERT((ulParity == SOFTUART_CONFIG_PAR_NONE) ||
-           (ulParity == SOFTUART_CONFIG_PAR_EVEN) ||
-           (ulParity == SOFTUART_CONFIG_PAR_ODD) ||
-           (ulParity == SOFTUART_CONFIG_PAR_ONE) ||
-           (ulParity == SOFTUART_CONFIG_PAR_ZERO));
+    ASSERT((ui32Parity == SOFTUART_CONFIG_PAR_NONE) ||
+           (ui32Parity == SOFTUART_CONFIG_PAR_EVEN) ||
+           (ui32Parity == SOFTUART_CONFIG_PAR_ODD) ||
+           (ui32Parity == SOFTUART_CONFIG_PAR_ONE) ||
+           (ui32Parity == SOFTUART_CONFIG_PAR_ZERO));
 
     //
     // Set the parity mode.
     //
-    pUART->usConfig = (pUART->usConfig & SOFTUART_CONFIG_PAR_MASK) | ulParity;
+    psUART->ui16Config =
+        (psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK) | ui32Parity;
 }
 
 //*****************************************************************************
 //
 //! Gets the type of parity currently being used.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function gets the type of parity used for transmitting data and
 //! expected when receiving data.
@@ -1499,20 +1504,20 @@ SoftUARTParityModeSet(tSoftUART *pUART, unsigned long ulParity)
 //! \b SOFTUART_CONFIG_PAR_ZERO.
 //
 //*****************************************************************************
-unsigned long
-SoftUARTParityModeGet(tSoftUART *pUART)
+uint32_t
+SoftUARTParityModeGet(tSoftUART *psUART)
 {
     //
     // Return the current parity setting.
     //
-    return(pUART->usConfig & SOFTUART_CONFIG_PAR_MASK);
+    return(psUART->ui16Config & SOFTUART_CONFIG_PAR_MASK);
 }
 
 //*****************************************************************************
 //
 //! Sets the transmit ``interrupt'' buffer level.
 //!
-//! \param pUART specifies the soft UART data structure.
+//! \param psUART specifies the soft UART data structure.
 //!
 //! This function computes the transmit buffer level at which the transmit
 //! ``interrupt'' is generated.
@@ -1521,12 +1526,12 @@ SoftUARTParityModeGet(tSoftUART *pUART)
 //
 //*****************************************************************************
 static void
-SoftUARTTxLevelSet(tSoftUART *pUART)
+SoftUARTTxLevelSet(tSoftUART *psUART)
 {
     //
     // Determine the transmit buffer "interrupt" fullness setting.
     //
-    switch(pUART->usConfig & SOFTUART_CONFIG_TXLVL_M)
+    switch(psUART->ui16Config & SOFTUART_CONFIG_TXLVL_M)
     {
         //
         // The transmit "interrupt" should be generated when the buffer is 1/8
@@ -1537,7 +1542,7 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
             //
             // Set the transmit buffer level to 1/8 of the buffer length.
             //
-            pUART->usTxBufferLevel = pUART->usTxBufferLen / 8;
+            psUART->ui16TxBufferLevel = psUART->ui16TxBufferLen / 8;
 
             //
             // This setting has been handled.
@@ -1554,7 +1559,7 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
             //
             // Set the transmit buffer level to 1/4 of the buffer length.
             //
-            pUART->usTxBufferLevel = pUART->usTxBufferLen / 4;
+            psUART->ui16TxBufferLevel = psUART->ui16TxBufferLen / 4;
 
             //
             // This setting has been handled.
@@ -1571,7 +1576,7 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
             //
             // Set the transmit buffer level to 1/2 of the buffer length.
             //
-            pUART->usTxBufferLevel = pUART->usTxBufferLen / 2;
+            psUART->ui16TxBufferLevel = psUART->ui16TxBufferLen / 2;
 
             //
             // This setting has been handled.
@@ -1588,7 +1593,7 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
             //
             // Set the transmit buffer level to 3/4 of the buffer length.
             //
-            pUART->usTxBufferLevel = (pUART->usTxBufferLen * 3) / 4;
+            psUART->ui16TxBufferLevel = (psUART->ui16TxBufferLen * 3) / 4;
 
             //
             // This setting has been handled.
@@ -1605,7 +1610,7 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
             //
             // Set the transmit buffer level to 7/8 of the buffer length.
             //
-            pUART->usTxBufferLevel = (pUART->usTxBufferLen * 7) / 8;
+            psUART->ui16TxBufferLevel = (psUART->ui16TxBufferLen * 7) / 8;
 
             //
             // This setting has been handled.
@@ -1619,7 +1624,7 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
 //
 //! Sets the receive ``interrupt'' buffer level.
 //!
-//! \param pUART specifies the soft UART data structure.
+//! \param psUART specifies the soft UART data structure.
 //!
 //! This function computes the receive buffer level at which the receive
 //! ``interrupt'' is generated.
@@ -1628,12 +1633,12 @@ SoftUARTTxLevelSet(tSoftUART *pUART)
 //
 //*****************************************************************************
 static void
-SoftUARTRxLevelSet(tSoftUART *pUART)
+SoftUARTRxLevelSet(tSoftUART *psUART)
 {
     //
     // Determine the receive buffer "interrupt" fullness setting.
     //
-    switch(pUART->usConfig & SOFTUART_CONFIG_RXLVL_M)
+    switch(psUART->ui16Config & SOFTUART_CONFIG_RXLVL_M)
     {
         //
         // The receive "interrupt" should be generated when the buffer is 1/8
@@ -1644,7 +1649,7 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
             //
             // Set the receive buffer level to 1/8 of the buffer length.
             //
-            pUART->usRxBufferLevel = pUART->usRxBufferLen / 8;
+            psUART->ui16RxBufferLevel = psUART->ui16RxBufferLen / 8;
 
             //
             // This setting has been handled.
@@ -1661,7 +1666,7 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
             //
             // Set the receive buffer level to 1/4 of the buffer length.
             //
-            pUART->usRxBufferLevel = pUART->usRxBufferLen / 4;
+            psUART->ui16RxBufferLevel = psUART->ui16RxBufferLen / 4;
 
             //
             // This setting has been handled.
@@ -1678,7 +1683,7 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
             //
             // Set the receive buffer level to 1/2 of the buffer length.
             //
-            pUART->usRxBufferLevel = pUART->usRxBufferLen / 2;
+            psUART->ui16RxBufferLevel = psUART->ui16RxBufferLen / 2;
 
             //
             // This setting has been handled.
@@ -1695,7 +1700,7 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
             //
             // Set the receive buffer level to 3/4 of the buffer length.
             //
-            pUART->usRxBufferLevel = (pUART->usRxBufferLen * 3) / 4;
+            psUART->ui16RxBufferLevel = (psUART->ui16RxBufferLen * 3) / 4;
 
             //
             // This setting has been handled.
@@ -1712,7 +1717,7 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
             //
             // Set the receive buffer level to 7/8 of the buffer length.
             //
-            pUART->usRxBufferLevel = (pUART->usRxBufferLen * 7) / 8;
+            psUART->ui16RxBufferLevel = (psUART->ui16RxBufferLen * 7) / 8;
 
             //
             // This setting has been handled.
@@ -1726,11 +1731,11 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
 //
 //! Sets the buffer level at which ``interrupts'' are generated.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulTxLevel is the transmit buffer ``interrupt'' level, specified as
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32TxLevel is the transmit buffer ``interrupt'' level, specified as
 //! one of \b UART_FIFO_TX1_8, \b UART_FIFO_TX2_8, \b UART_FIFO_TX4_8,
 //! \b UART_FIFO_TX6_8, or \b UART_FIFO_TX7_8.
-//! \param ulRxLevel is the receive buffer ``interrupt'' level, specified as
+//! \param ui32RxLevel is the receive buffer ``interrupt'' level, specified as
 //! one of \b UART_FIFO_RX1_8, \b UART_FIFO_RX2_8, \b UART_FIFO_RX4_8,
 //! \b UART_FIFO_RX6_8, or \b UART_FIFO_RX7_8.
 //!
@@ -1741,45 +1746,45 @@ SoftUARTRxLevelSet(tSoftUART *pUART)
 //
 //*****************************************************************************
 void
-SoftUARTFIFOLevelSet(tSoftUART *pUART, unsigned long ulTxLevel,
-                     unsigned long ulRxLevel)
+SoftUARTFIFOLevelSet(tSoftUART *psUART, uint32_t ui32TxLevel,
+                     uint32_t ui32RxLevel)
 {
     //
     // Check the arguments.
     //
-    ASSERT((ulTxLevel == SOFTUART_FIFO_TX1_8) ||
-           (ulTxLevel == SOFTUART_FIFO_TX2_8) ||
-           (ulTxLevel == SOFTUART_FIFO_TX4_8) ||
-           (ulTxLevel == SOFTUART_FIFO_TX6_8) ||
-           (ulTxLevel == SOFTUART_FIFO_TX7_8));
-    ASSERT((ulRxLevel == SOFTUART_FIFO_RX1_8) ||
-           (ulRxLevel == SOFTUART_FIFO_RX2_8) ||
-           (ulRxLevel == SOFTUART_FIFO_RX4_8) ||
-           (ulRxLevel == SOFTUART_FIFO_RX6_8) ||
-           (ulRxLevel == SOFTUART_FIFO_RX7_8));
+    ASSERT((ui32TxLevel == SOFTUART_FIFO_TX1_8) ||
+           (ui32TxLevel == SOFTUART_FIFO_TX2_8) ||
+           (ui32TxLevel == SOFTUART_FIFO_TX4_8) ||
+           (ui32TxLevel == SOFTUART_FIFO_TX6_8) ||
+           (ui32TxLevel == SOFTUART_FIFO_TX7_8));
+    ASSERT((ui32RxLevel == SOFTUART_FIFO_RX1_8) ||
+           (ui32RxLevel == SOFTUART_FIFO_RX2_8) ||
+           (ui32RxLevel == SOFTUART_FIFO_RX4_8) ||
+           (ui32RxLevel == SOFTUART_FIFO_RX6_8) ||
+           (ui32RxLevel == SOFTUART_FIFO_RX7_8));
 
     //
     // Save the buffer "interrupt" levels.
     //
-    pUART->usConfig = ((pUART->usConfig & SOFTUART_CONFIG_BASE_M) |
-                       ((ulTxLevel | ulRxLevel) << 8));
+    psUART->ui16Config = ((psUART->ui16Config & SOFTUART_CONFIG_BASE_M) |
+                          ((ui32TxLevel | ui32RxLevel) << 8));
 
     //
     // Compute the new buffer "interrupt" levels.
     //
-    SoftUARTTxLevelSet(pUART);
-    SoftUARTRxLevelSet(pUART);
+    SoftUARTTxLevelSet(psUART);
+    SoftUARTRxLevelSet(psUART);
 }
 
 //*****************************************************************************
 //
 //! Gets the buffer level at which ``interrupts'' are generated.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param pulTxLevel is a pointer to storage for the transmit buffer level,
+//! \param psUART specifies the SoftUART data structure.
+//! \param pui32TxLevel is a pointer to storage for the transmit buffer level,
 //! returned as one of \b UART_FIFO_TX1_8, \b UART_FIFO_TX2_8,
 //! \b UART_FIFO_TX4_8, \b UART_FIFO_TX6_8, or \b UART_FIFO_TX7_8.
-//! \param pulRxLevel is a pointer to storage for the receive buffer level,
+//! \param pui32RxLevel is a pointer to storage for the receive buffer level,
 //! returned as one of \b UART_FIFO_RX1_8, \b UART_FIFO_RX2_8,
 //! \b UART_FIFO_RX4_8, \b UART_FIFO_RX6_8, or \b UART_FIFO_RX7_8.
 //!
@@ -1790,44 +1795,44 @@ SoftUARTFIFOLevelSet(tSoftUART *pUART, unsigned long ulTxLevel,
 //
 //*****************************************************************************
 void
-SoftUARTFIFOLevelGet(tSoftUART *pUART, unsigned long *pulTxLevel,
-                 unsigned long *pulRxLevel)
+SoftUARTFIFOLevelGet(tSoftUART *psUART, uint32_t *pui32TxLevel,
+                     uint32_t *pui32RxLevel)
 {
     //
     // Extract the transmit and receive buffer levels.
     //
-    *pulTxLevel = (pUART->usConfig & SOFTUART_CONFIG_TXLVL_M) >> 8;
-    *pulRxLevel = (pUART->usConfig & SOFTUART_CONFIG_RXLVL_M) >> 8;
+    *pui32TxLevel = (psUART->ui16Config & SOFTUART_CONFIG_TXLVL_M) >> 8;
+    *pui32RxLevel = (psUART->ui16Config & SOFTUART_CONFIG_RXLVL_M) >> 8;
 }
 
 //*****************************************************************************
 //
 //! Gets the current configuration of a UART.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param pulConfig is a pointer to storage for the data format.
+//! \param psUART specifies the SoftUART data structure.
+//! \param pui32Config is a pointer to storage for the data format.
 //!
 //! Returns the data format of the SoftUART.  The data format returned in
-//! \e pulConfig is enumerated the same as the \e ulConfig parameter of
+//! \e pui32Config is enumerated the same as the \e ui32Config parameter of
 //! SoftUARTConfigSet().
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftUARTConfigGet(tSoftUART *pUART, unsigned long *pulConfig)
+SoftUARTConfigGet(tSoftUART *psUART, uint32_t *pui32Config)
 {
     //
     // Get the data format.
     //
-    *pulConfig = pUART->usConfig & SOFTUART_CONFIG_BASE_M;
+    *pui32Config = psUART->ui16Config & SOFTUART_CONFIG_BASE_M;
 }
 
 //*****************************************************************************
 //
 //! Enables the SoftUART.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function enables the SoftUART, allowing data to be transmitted and
 //! received.
@@ -1836,19 +1841,19 @@ SoftUARTConfigGet(tSoftUART *pUART, unsigned long *pulConfig)
 //
 //*****************************************************************************
 void
-SoftUARTEnable(tSoftUART *pUART)
+SoftUARTEnable(tSoftUART *psUART)
 {
     //
     // Enable the SoftUART.
     //
-    pUART->ucFlags |= SOFTUART_FLAG_ENABLE;
+    psUART->ui8Flags |= SOFTUART_FLAG_ENABLE;
 }
 
 //*****************************************************************************
 //
 //! Disables the SoftUART.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function disables the SoftUART after waiting for it to become idle.
 //!
@@ -1856,26 +1861,26 @@ SoftUARTEnable(tSoftUART *pUART)
 //
 //*****************************************************************************
 void
-SoftUARTDisable(tSoftUART *pUART)
+SoftUARTDisable(tSoftUART *psUART)
 {
     //
     // Wait for end of TX.
     //
-    while(SoftUARTBusy(pUART))
+    while(SoftUARTBusy(psUART))
     {
     }
 
     //
     // Disable the SoftUART.
     //
-    pUART->ucFlags &= ~(SOFTUART_FLAG_ENABLE);
+    psUART->ui8Flags &= ~(SOFTUART_FLAG_ENABLE);
 }
 
 //*****************************************************************************
 //
 //! Determines if there are any characters in the receive buffer.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function returns a flag indicating whether or not there is data
 //! available in the receive buffer.
@@ -1884,20 +1889,21 @@ SoftUARTDisable(tSoftUART *pUART)
 //! if there is no data in the receive buffer.
 //
 //*****************************************************************************
-tBoolean
-SoftUARTCharsAvail(tSoftUART *pUART)
+bool
+SoftUARTCharsAvail(tSoftUART *psUART)
 {
     //
     // Return the availability of characters.
     //
-    return((pUART->usRxBufferRead == pUART->usRxBufferWrite) ? false : true);
+    return((psUART->ui16RxBufferRead == psUART->ui16RxBufferWrite) ? false :
+           true);
 }
 
 //*****************************************************************************
 //
 //! Determines if there is any space in the transmit buffer.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function returns a flag indicating whether or not there is space
 //! available in the transmit buffer.
@@ -1906,31 +1912,31 @@ SoftUARTCharsAvail(tSoftUART *pUART)
 //! or \b false if there is no space available in the transmit buffer.
 //
 //*****************************************************************************
-tBoolean
-SoftUARTSpaceAvail(tSoftUART *pUART)
+bool
+SoftUARTSpaceAvail(tSoftUART *psUART)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the values of the write pointer once incremented.
     //
-    usTemp = pUART->usTxBufferWrite + 1;
-    if(usTemp == pUART->usTxBufferLen)
+    ui16Temp = psUART->ui16TxBufferWrite + 1;
+    if(ui16Temp == psUART->ui16TxBufferLen)
     {
-        usTemp = 0;
+        ui16Temp = 0;
     }
 
     //
     // Return the availability of space.
     //
-    return((pUART->usTxBufferRead == usTemp) ? false : true);
+    return((psUART->ui16TxBufferRead == ui16Temp) ? false : true);
 }
 
 //*****************************************************************************
 //
 //! Handles the deassertion of the receive ``interrupts''.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function is used to determine when to deassert the receive
 //! ``interrupt'' as a result of reading data from the receive buffer.
@@ -1939,44 +1945,44 @@ SoftUARTSpaceAvail(tSoftUART *pUART)
 //
 //*****************************************************************************
 static void
-SoftUARTRxReadInt(tSoftUART *pUART)
+SoftUARTRxReadInt(tSoftUART *psUART)
 {
-    unsigned long ulTemp;
+    uint32_t ui32Temp;
 
     //
     // Determine the number of characters in the receive buffer.
     //
-    if(pUART->usRxBufferWrite > pUART->usRxBufferRead)
+    if(psUART->ui16RxBufferWrite > psUART->ui16RxBufferRead)
     {
-        ulTemp = pUART->usRxBufferWrite - pUART->usRxBufferRead;
+        ui32Temp = psUART->ui16RxBufferWrite - psUART->ui16RxBufferRead;
     }
     else
     {
-        ulTemp = (pUART->usRxBufferLen + pUART->usRxBufferWrite -
-                  pUART->usRxBufferRead);
+        ui32Temp = (psUART->ui16RxBufferLen + psUART->ui16RxBufferWrite -
+                    psUART->ui16RxBufferRead);
     }
 
     //
     // See if the number of characters in the receive buffer have dropped below
     // the receive trigger level.
     //
-    if(ulTemp < pUART->usRxBufferLevel)
+    if(ui32Temp < psUART->ui16RxBufferLevel)
     {
         //
         // Deassert the receive "interrupt".
         //
-        pUART->usIntStatus &= ~(SOFTUART_INT_RX);
+        psUART->ui16IntStatus &= ~(SOFTUART_INT_RX);
     }
 
     //
     // See if the receive buffer is now empty.
     //
-    if(ulTemp == 0)
+    if(ui32Temp == 0)
     {
         //
         // Deassert the receive timeout "interrupt".
         //
-        pUART->usIntStatus &= ~(SOFTUART_INT_RT);
+        psUART->ui16IntStatus &= ~(SOFTUART_INT_RT);
     }
 }
 
@@ -1984,51 +1990,52 @@ SoftUARTRxReadInt(tSoftUART *pUART)
 //
 //! Receives a character from the specified port.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! Gets a character from the receive buffer for the specified port.
 //!
 //! \return Returns the character read from the specified port, cast as a
-//! \e long.  A \b -1 isreturned if there are no characters present in the
+//! \e int32_t.  A \b -1 is returned if there are no characters present in the
 //! receive buffer.  The SoftUARTCharsAvail() function should be called before
 //! attempting to call this function.
 //
 //*****************************************************************************
-long
-SoftUARTCharGetNonBlocking(tSoftUART *pUART)
+int32_t
+SoftUARTCharGetNonBlocking(tSoftUART *psUART)
 {
-    long lTemp;
+    int32_t i32Temp;
 
     //
     // See if there are any characters in the receive buffer.
     //
-    if(pUART->usRxBufferRead != pUART->usRxBufferWrite)
+    if(psUART->ui16RxBufferRead != psUART->ui16RxBufferWrite)
     {
         //
         // Read the next character.
         //
-        lTemp = pUART->pusRxBuffer[pUART->usRxBufferRead];
-        pUART->usRxBufferRead++;
-        if(pUART->usRxBufferRead == pUART->usRxBufferLen)
+        i32Temp = psUART->pui16RxBuffer[psUART->ui16RxBufferRead];
+        psUART->ui16RxBufferRead++;
+        if(psUART->ui16RxBufferRead == psUART->ui16RxBufferLen)
         {
-            pUART->usRxBufferRead = 0;
+            psUART->ui16RxBufferRead = 0;
         }
 
         //
         // Deassert the receive "interrupt(s)" if appropriate.
         //
-        SoftUARTRxReadInt(pUART);
+        SoftUARTRxReadInt(psUART);
 
         //
         // Set the receive status to match this character.
         //
-        pUART->ucRxStatus = ((pUART->ucRxStatus & SOFTUART_RXERROR_OVERRUN) |
-                             ((lTemp >> 8) & ~(SOFTUART_RXERROR_OVERRUN)));
+        psUART->ui8RxStatus =
+            ((psUART->ui8RxStatus & SOFTUART_RXERROR_OVERRUN) |
+             ((i32Temp >> 8) & ~(SOFTUART_RXERROR_OVERRUN)));
 
         //
         // Return this character.
         //
-        return(lTemp);
+        return(i32Temp);
     }
     else
     {
@@ -2043,64 +2050,64 @@ SoftUARTCharGetNonBlocking(tSoftUART *pUART)
 //
 //! Waits for a character from the specified port.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! Gets a character from the receive buffer for the specified port.  If there
 //! are no characters available, this function waits until a character is
 //! received before returning.
 //!
 //! \return Returns the character read from the specified port, cast as a
-//! \e long.
+//! \e int32_t.
 //
 //*****************************************************************************
-long
-SoftUARTCharGet(tSoftUART *pUART)
+int32_t
+SoftUARTCharGet(tSoftUART *psUART)
 {
-    long lTemp;
+    int32_t i32Temp;
 
     //
-    // Wait until a char is available.
+    // Wait until a int8_t is available.
     //
-    while(pUART->usRxBufferRead ==
-          *(volatile unsigned short *)(&(pUART->usRxBufferWrite)))
+    while(psUART->ui16RxBufferRead ==
+          *(volatile uint16_t *)(&(psUART->ui16RxBufferWrite)))
     {
     }
 
     //
     // Read the next character.
     //
-    lTemp = pUART->pusRxBuffer[pUART->usRxBufferRead];
-    pUART->usRxBufferRead++;
-    if(pUART->usRxBufferRead == pUART->usRxBufferLen)
+    i32Temp = psUART->pui16RxBuffer[psUART->ui16RxBufferRead];
+    psUART->ui16RxBufferRead++;
+    if(psUART->ui16RxBufferRead == psUART->ui16RxBufferLen)
     {
-        pUART->usRxBufferRead = 0;
+        psUART->ui16RxBufferRead = 0;
     }
 
     //
     // Deassert the receive "interrupt(s)" if appropriate.
     //
-    SoftUARTRxReadInt(pUART);
+    SoftUARTRxReadInt(psUART);
 
     //
     // Set the receive status to match this character.
     //
-    pUART->ucRxStatus = ((pUART->ucRxStatus & SOFTUART_RXERROR_OVERRUN) |
-                         ((lTemp >> 8) & ~(SOFTUART_RXERROR_OVERRUN)));
+    psUART->ui8RxStatus = ((psUART->ui8RxStatus & SOFTUART_RXERROR_OVERRUN) |
+                           ((i32Temp >> 8) & ~(SOFTUART_RXERROR_OVERRUN)));
 
     //
     // Return this character.
     //
-    return(lTemp);
+    return(i32Temp);
 }
 
 //*****************************************************************************
 //
 //! Sends a character to the specified port.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ucData is the character to be transmitted.
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui8Data is the character to be transmitted.
 //!
-//! Writes the character \e ucData to the transmit buffer for the specified
+//! Writes the character \e ui8Data to the transmit buffer for the specified
 //! port.  This function does not block, so if there is no space available,
 //! then a \b false is returned, and the application must retry the function
 //! later.
@@ -2110,30 +2117,30 @@ SoftUARTCharGet(tSoftUART *pUART)
 //! transmit buffer.
 //
 //*****************************************************************************
-tBoolean
-SoftUARTCharPutNonBlocking(tSoftUART *pUART, unsigned char ucData)
+bool
+SoftUARTCharPutNonBlocking(tSoftUART *psUART, uint8_t ui8Data)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Determine the values of the write pointer once incremented.
     //
-    usTemp = pUART->usTxBufferWrite + 1;
-    if(usTemp == pUART->usTxBufferLen)
+    ui16Temp = psUART->ui16TxBufferWrite + 1;
+    if(ui16Temp == psUART->ui16TxBufferLen)
     {
-        usTemp = 0;
+        ui16Temp = 0;
     }
 
     //
     // See if there is space in the transmit buffer.
     //
-    if(usTemp != pUART->usTxBufferRead)
+    if(ui16Temp != psUART->ui16TxBufferRead)
     {
         //
         // Write this character to the transmit buffer.
         //
-        pUART->pucTxBuffer[pUART->usTxBufferWrite] = ucData;
-        pUART->usTxBufferWrite = usTemp;
+        psUART->pui8TxBuffer[psUART->ui16TxBufferWrite] = ui8Data;
+        psUART->ui16TxBufferWrite = ui16Temp;
 
         //
         // Success.
@@ -2153,10 +2160,10 @@ SoftUARTCharPutNonBlocking(tSoftUART *pUART, unsigned char ucData)
 //
 //! Waits to send a character from the specified port.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ucData is the character to be transmitted.
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui8Data is the character to be transmitted.
 //!
-//! Sends the character \e ucData to the transmit buffer for the specified
+//! Sends the character \e ui8Data to the transmit buffer for the specified
 //! port.  If there is no space available in the transmit buffer, this function
 //! waits until there is space available before returning.
 //!
@@ -2164,34 +2171,34 @@ SoftUARTCharPutNonBlocking(tSoftUART *pUART, unsigned char ucData)
 //
 //*****************************************************************************
 void
-SoftUARTCharPut(tSoftUART *pUART, unsigned char ucData)
+SoftUARTCharPut(tSoftUART *psUART, uint8_t ui8Data)
 {
-    unsigned short usTemp;
+    uint16_t ui16Temp;
 
     //
     // Wait until space is available.
     //
-    usTemp = pUART->usTxBufferWrite + 1;
-    if(usTemp == pUART->usTxBufferLen)
+    ui16Temp = psUART->ui16TxBufferWrite + 1;
+    if(ui16Temp == psUART->ui16TxBufferLen)
     {
-        usTemp = 0;
+        ui16Temp = 0;
     }
-    while(usTemp == *(volatile unsigned short *)(&(pUART->usTxBufferRead)))
+    while(ui16Temp == *(volatile uint16_t *)(&(psUART->ui16TxBufferRead)))
     {
     }
 
     //
-    // Send the char.
+    // Send the int8_t.
     //
-    pUART->pucTxBuffer[pUART->usTxBufferWrite] = ucData;
-    pUART->usTxBufferWrite = usTemp;
+    psUART->pui8TxBuffer[psUART->ui16TxBufferWrite] = ui8Data;
+    psUART->ui16TxBufferWrite = ui16Temp;
 }
 
 //*****************************************************************************
 //
 //! Causes a BREAK to be sent.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //! \param bBreakState controls the output level.
 //!
 //! Calling this function with \e bBreakState set to \b true asserts a break
@@ -2203,18 +2210,18 @@ SoftUARTCharPut(tSoftUART *pUART, unsigned char ucData)
 //
 //*****************************************************************************
 void
-SoftUARTBreakCtl(tSoftUART *pUART, tBoolean bBreakState)
+SoftUARTBreakCtl(tSoftUART *psUART, bool bBreakState)
 {
     //
     // Set the break condition as requested.
     //
     if(bBreakState)
     {
-        pUART->ucFlags |= SOFTUART_FLAG_TXBREAK;
+        psUART->ui8Flags |= SOFTUART_FLAG_TXBREAK;
     }
     else
     {
-        pUART->ucFlags &= ~(SOFTUART_FLAG_TXBREAK);
+        psUART->ui8Flags &= ~(SOFTUART_FLAG_TXBREAK);
     }
 }
 
@@ -2222,7 +2229,7 @@ SoftUARTBreakCtl(tSoftUART *pUART, tBoolean bBreakState)
 //
 //! Determines whether the UART transmitter is busy or not.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! Allows the caller to determine whether all transmitted bytes have cleared
 //! the transmitter hardware.  If \b false is returned, the transmit buffer is
@@ -2233,15 +2240,15 @@ SoftUARTBreakCtl(tSoftUART *pUART, tBoolean bBreakState)
 //! transmissions are complete.
 //
 //*****************************************************************************
-tBoolean
-SoftUARTBusy(tSoftUART *pUART)
+bool
+SoftUARTBusy(tSoftUART *psUART)
 {
     //
     // Determine if the UART is busy.
     //
-    return(((pUART->ucTxState == SOFTUART_TXSTATE_IDLE) &&
-            (((pUART->ucFlags & SOFTUART_FLAG_ENABLE) == 0) ||
-             (pUART->usTxBufferRead == pUART->usTxBufferWrite))) ?
+    return(((psUART->ui8TxState == SOFTUART_TXSTATE_IDLE) &&
+            (((psUART->ui8Flags & SOFTUART_FLAG_ENABLE) == 0) ||
+             (psUART->ui16TxBufferRead == psUART->ui16TxBufferWrite))) ?
            false : true);
 }
 
@@ -2249,14 +2256,14 @@ SoftUARTBusy(tSoftUART *pUART)
 //
 //! Enables individual SoftUART ``interrupt'' sources.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulIntFlags is the bit mask of the ``interrupt'' sources to be
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32IntFlags is the bit mask of the ``interrupt'' sources to be
 //! enabled.
 //!
 //! Enables the indicated SoftUART ``interrupt'' sources.  Only the sources
 //! that are enabled can be reflected to the SoftUART callback.
 //!
-//! The \e ulIntFlags parameter is the logical OR of any of the following:
+//! The \e ui32IntFlags parameter is the logical OR of any of the following:
 //!
 //! - \b SOFTUART_INT_OE - Overrun Error ``interrupt''
 //! - \b SOFTUART_INT_BE - Break Error ``interrupt''
@@ -2270,45 +2277,45 @@ SoftUARTBusy(tSoftUART *pUART)
 //
 //*****************************************************************************
 void
-SoftUARTIntEnable(tSoftUART *pUART, unsigned long ulIntFlags)
+SoftUARTIntEnable(tSoftUART *psUART, uint32_t ui32IntFlags)
 {
     //
     // Enable the specified interrupts.
     //
-    pUART->usIntMask |= ulIntFlags;
+    psUART->ui16IntMask |= ui32IntFlags;
 }
 
 //*****************************************************************************
 //
 //! Disables individual SoftUART ``interrupt'' sources.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulIntFlags is the bit mask of the ``interrupt'' sources to be
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32IntFlags is the bit mask of the ``interrupt'' sources to be
 //! disabled.
 //!
 //! Disables the indicated SoftUART ``interrupt'' sources.  Only the sources
 //! that are enabled can be reflected to the SoftUART callback.
 //!
-//! The \e ulIntFlags parameter has the same definition as the \e ulIntFlags
-//! parameter to SoftUARTIntEnable().
+//! The \e ui32IntFlags parameter has the same definition as the
+//! \e ui32IntFlags parameter to SoftUARTIntEnable().
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftUARTIntDisable(tSoftUART *pUART, unsigned long ulIntFlags)
+SoftUARTIntDisable(tSoftUART *psUART, uint32_t ui32IntFlags)
 {
     //
     // Disable the specified interrupts.
     //
-    pUART->usIntMask &= ~(ulIntFlags);
+    psUART->ui16IntMask &= ~(ui32IntFlags);
 }
 
 //*****************************************************************************
 //
 //! Gets the current SoftUART ``interrupt'' status.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //! \param bMasked is \b false if the raw ``interrupt'' status is required and
 //! \b true if the masked ``interrupt'' status is required.
 //!
@@ -2320,8 +2327,8 @@ SoftUARTIntDisable(tSoftUART *pUART, unsigned long ulIntFlags)
 //! of values described in SoftUARTIntEnable().
 //
 //*****************************************************************************
-unsigned long
-SoftUARTIntStatus(tSoftUART *pUART, tBoolean bMasked)
+uint32_t
+SoftUARTIntStatus(tSoftUART *psUART, bool bMasked)
 {
     //
     // Return either the interrupt status or the raw interrupt status as
@@ -2329,11 +2336,11 @@ SoftUARTIntStatus(tSoftUART *pUART, tBoolean bMasked)
     //
     if(bMasked)
     {
-        return(pUART->usIntStatus & pUART->usIntMask);
+        return(psUART->ui16IntStatus & psUART->ui16IntMask);
     }
     else
     {
-        return(pUART->usIntStatus);
+        return(psUART->ui16IntStatus);
     }
 }
 
@@ -2341,33 +2348,34 @@ SoftUARTIntStatus(tSoftUART *pUART, tBoolean bMasked)
 //
 //! Clears SoftUART ``interrupt'' sources.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulIntFlags is a bit mask of the ``interrupt'' sources to be cleared.
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32IntFlags is a bit mask of the ``interrupt'' sources to be
+//! cleared.
 //!
 //! The specified SoftUART ``interrupt'' sources are cleared, so that they no
 //! longer assert.  This function must be called in the callback function to
 //! keep the ``interrupt'' from being recognized again immediately upon exit.
 //!
-//! The \e ulIntFlags parameter has the same definition as the \e ulIntFlags
-//! parameter to SoftUARTIntEnable().
+//! The \e ui32IntFlags parameter has the same definition as the
+//! \e ui32IntFlags parameter to SoftUARTIntEnable().
 //!
 //! \return None.
 //
 //*****************************************************************************
 void
-SoftUARTIntClear(tSoftUART *pUART, unsigned long ulIntFlags)
+SoftUARTIntClear(tSoftUART *psUART, uint32_t ui32IntFlags)
 {
     //
     // Clear the requested interrupt sources.
     //
-    pUART->usIntStatus &= ~(ulIntFlags);
+    psUART->ui16IntStatus &= ~(ui32IntFlags);
 }
 
 //*****************************************************************************
 //
 //! Gets current receiver errors.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function returns the current state of each of the 4 receiver error
 //! sources.  The returned errors are equivalent to the four error bits
@@ -2381,20 +2389,20 @@ SoftUARTIntClear(tSoftUART *pUART, unsigned long ulIntFlags)
 //! \b SOFTUART_RXERROR_BREAK and \b SOFTUART_RXERROR_OVERRUN.
 //
 //*****************************************************************************
-unsigned long
-SoftUARTRxErrorGet(tSoftUART *pUART)
+uint32_t
+SoftUARTRxErrorGet(tSoftUART *psUART)
 {
     //
     // Return the current value of the receive status.
     //
-    return(pUART->ucRxStatus);
+    return(psUART->ui8RxStatus);
 }
 
 //*****************************************************************************
 //
 //! Clears all reported receiver errors.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //!
 //! This function is used to clear all receiver error conditions reported via
 //! SoftUARTRxErrorGet().  If using the overrun, framing error, parity error or
@@ -2405,19 +2413,19 @@ SoftUARTRxErrorGet(tSoftUART *pUART)
 //
 //*****************************************************************************
 void
-SoftUARTRxErrorClear(tSoftUART *pUART)
+SoftUARTRxErrorClear(tSoftUART *psUART)
 {
     //
     // Clear any receive error status.
     //
-    pUART->ucRxStatus = 0;
+    psUART->ui8RxStatus = 0;
 }
 
 //*****************************************************************************
 //
 //! Sets the callback used by the SoftUART module.
 //!
-//! \param pUART specifies the SoftUART data structure.
+//! \param psUART specifies the SoftUART data structure.
 //! \param pfnCallback is a pointer to the callback function.
 //!
 //! This function sets the address of the callback function that is called when
@@ -2427,21 +2435,21 @@ SoftUARTRxErrorClear(tSoftUART *pUART)
 //
 //*****************************************************************************
 void
-SoftUARTCallbackSet(tSoftUART *pUART, void (*pfnCallback)(void))
+SoftUARTCallbackSet(tSoftUART *psUART, void (*pfnCallback)(void))
 {
     //
     // Save the callback function address.
     //
-    pUART->pfnIntCallback = pfnCallback;
+    psUART->pfnIntCallback = pfnCallback;
 }
 
 //*****************************************************************************
 //
 //! Sets the GPIO pin to be used as the SoftUART Tx signal.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulBase is the base address of the GPIO module.
-//! \param ucPin is the bit-packed representation of the pin to use.
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32Base is the base address of the GPIO module.
+//! \param ui8Pin is the bit-packed representation of the pin to use.
 //!
 //! This function sets the GPIO pin that is used when the SoftUART must assert
 //! the Tx signal.
@@ -2453,18 +2461,18 @@ SoftUARTCallbackSet(tSoftUART *pUART, void (*pfnCallback)(void))
 //
 //*****************************************************************************
 void
-SoftUARTTxGPIOSet(tSoftUART *pUART, unsigned long ulBase, unsigned char ucPin)
+SoftUARTTxGPIOSet(tSoftUART *psUART, uint32_t ui32Base, uint8_t ui8Pin)
 {
     //
     // Save the base address and pin for the Tx signal.
     //
-    if(ulBase == 0)
+    if(ui32Base == 0)
     {
-        pUART->ulTxGPIO = 0;
+        psUART->ui32TxGPIO = 0;
     }
     else
     {
-        pUART->ulTxGPIO = ulBase + (ucPin << 2);
+        psUART->ui32TxGPIO = ui32Base + (ui8Pin << 2);
     }
 }
 
@@ -2472,9 +2480,9 @@ SoftUARTTxGPIOSet(tSoftUART *pUART, unsigned long ulBase, unsigned char ucPin)
 //
 //! Sets the GPIO pin to be used as the SoftUART Rx signal.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param ulBase is the base address of the GPIO module.
-//! \param ucPin is the bit-packed representation of the pin to use.
+//! \param psUART specifies the SoftUART data structure.
+//! \param ui32Base is the base address of the GPIO module.
+//! \param ui8Pin is the bit-packed representation of the pin to use.
 //!
 //! This function sets the GPIO pin that is used when the SoftUART must sample
 //! the Rx signal.  If there is not a GPIO pin allocated for Rx, the SoftUART
@@ -2487,20 +2495,20 @@ SoftUARTTxGPIOSet(tSoftUART *pUART, unsigned long ulBase, unsigned char ucPin)
 //
 //*****************************************************************************
 void
-SoftUARTRxGPIOSet(tSoftUART *pUART, unsigned long ulBase, unsigned char ucPin)
+SoftUARTRxGPIOSet(tSoftUART *psUART, uint32_t ui32Base, uint8_t ui8Pin)
 {
     //
     // Save the base address and pin for the Rx signal.
     //
-    if(ulBase == 0)
+    if(ui32Base == 0)
     {
-        pUART->ulRxGPIOPort = 0;
-        pUART->ucRxPin = 0;
+        psUART->ui32RxGPIOPort = 0;
+        psUART->ui8RxPin = 0;
     }
     else
     {
-        pUART->ulRxGPIOPort = ulBase;
-        pUART->ucRxPin = ucPin;
+        psUART->ui32RxGPIOPort = ui32Base;
+        psUART->ui8RxPin = ui8Pin;
     }
 }
 
@@ -2508,9 +2516,9 @@ SoftUARTRxGPIOSet(tSoftUART *pUART, unsigned long ulBase, unsigned char ucPin)
 //
 //! Sets the transmit buffer for a SoftUART module.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param pucTxBuffer is the address of the transmit buffer.
-//! \param usLen is the size, in 8-bit bytes, of the transmit buffer.
+//! \param psUART specifies the SoftUART data structure.
+//! \param pui8TxBuffer is the address of the transmit buffer.
+//! \param ui16Len is the size, in 8-bit bytes, of the transmit buffer.
 //!
 //! This function sets the address and size of the transmit buffer.  It also
 //! resets the read and write pointers, marking the transmit buffer as empty.
@@ -2519,34 +2527,33 @@ SoftUARTRxGPIOSet(tSoftUART *pUART, unsigned long ulBase, unsigned char ucPin)
 //
 //*****************************************************************************
 void
-SoftUARTTxBufferSet(tSoftUART *pUART, unsigned char *pucTxBuffer,
-                   unsigned short usLen)
+SoftUARTTxBufferSet(tSoftUART *psUART, uint8_t *pui8TxBuffer, uint16_t ui16Len)
 {
     //
     // Save the transmit buffer address and length.
     //
-    pUART->pucTxBuffer = pucTxBuffer;
-    pUART->usTxBufferLen = usLen;
+    psUART->pui8TxBuffer = pui8TxBuffer;
+    psUART->ui16TxBufferLen = ui16Len;
 
     //
     // Reset the transmit buffer read and write pointers.
     //
-    pUART->usTxBufferRead = 0;
-    pUART->usTxBufferWrite = 0;
+    psUART->ui16TxBufferRead = 0;
+    psUART->ui16TxBufferWrite = 0;
 
     //
     // Compute the new buffer "interrupt" level.
     //
-    SoftUARTTxLevelSet(pUART);
+    SoftUARTTxLevelSet(psUART);
 }
 
 //*****************************************************************************
 //
 //! Sets the receive buffer for a SoftUART module.
 //!
-//! \param pUART specifies the SoftUART data structure.
-//! \param pusRxBuffer is the address of the receive buffer.
-//! \param usLen is the size, in 16-bit half-words, of the receive buffer.
+//! \param psUART specifies the SoftUART data structure.
+//! \param pui16RxBuffer is the address of the receive buffer.
+//! \param ui16Len is the size, in 16-bit half-words, of the receive buffer.
 //!
 //! This function sets the address and size of the receive buffer.  It also
 //! resets the read and write pointers, marking the receive buffer as empty.
@@ -2555,25 +2562,25 @@ SoftUARTTxBufferSet(tSoftUART *pUART, unsigned char *pucTxBuffer,
 //
 //*****************************************************************************
 void
-SoftUARTRxBufferSet(tSoftUART *pUART, unsigned short *pusRxBuffer,
-                   unsigned short usLen)
+SoftUARTRxBufferSet(tSoftUART *psUART, uint16_t *pui16RxBuffer,
+                    uint16_t ui16Len)
 {
     //
     // Save the receive buffer address and length.
     //
-    pUART->pusRxBuffer = pusRxBuffer;
-    pUART->usRxBufferLen = usLen;
+    psUART->pui16RxBuffer = pui16RxBuffer;
+    psUART->ui16RxBufferLen = ui16Len;
 
     //
     // Reset the receive read and write pointers.
     //
-    pUART->usRxBufferRead = 0;
-    pUART->usRxBufferWrite = 0;
+    psUART->ui16RxBufferRead = 0;
+    psUART->ui16RxBufferWrite = 0;
 
     //
     // Compute the new buffer "interrupt" level.
     //
-    SoftUARTRxLevelSet(pUART);
+    SoftUARTRxLevelSet(psUART);
 }
 
 //*****************************************************************************

@@ -2,7 +2,7 @@
 //
 // flash_pb.h - Prototypes for the flash parameter block functions.
 //
-// Copyright (c) 2008-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2008-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -41,10 +41,10 @@ extern "C"
 // Prototype for the flash parameter block functions.
 //
 //*****************************************************************************
-extern unsigned char *FlashPBGet(void);
-extern void FlashPBSave(unsigned char *pucBuffer);
-extern void FlashPBInit(unsigned long ulStart, unsigned long ulEnd,
-                        unsigned long ulSize);
+extern uint8_t *FlashPBGet(void);
+extern void FlashPBSave(uint8_t *pui8Buffer);
+extern void FlashPBInit(uint32_t ui32Start, uint32_t ui32End,
+                        uint32_t ui32Size);
 
 //*****************************************************************************
 //

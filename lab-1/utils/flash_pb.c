@@ -2,7 +2,7 @@
 //
 // flash_pb.c - Flash parameter block functions.
 //
-// Copyright (c) 2008-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2008-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,14 +18,19 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "inc/hw_flash.h"
 #include "inc/hw_types.h"
+#include "inc/hw_sysctl.h"
 #include "driverlib/debug.h"
 #include "driverlib/flash.h"
+#include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
 #include "driverlib/sysctl.h"
 #include "utils/flash_pb.h"
 
@@ -42,7 +47,7 @@
 // this must be the start of an erase block in the flash.
 //
 //*****************************************************************************
-static unsigned char *g_pucFlashPBStart;
+static uint8_t *g_pui8FlashPBStart;
 
 //*****************************************************************************
 //
@@ -52,28 +57,36 @@ static unsigned char *g_pucFlashPBStart;
 // parameters.
 //
 //*****************************************************************************
-static unsigned char *g_pucFlashPBEnd;
+static uint8_t *g_pui8FlashPBEnd;
 
 //*****************************************************************************
 //
 // The size of the parameter block when stored in flash; this must be a power
-// of two less than or equal to 1024.
+// of two less than or equal to the flash erase sector size such that a single
+// flash sector contains an integral number of parameter blocks.
 //
 //*****************************************************************************
-static unsigned long g_ulFlashPBSize;
+static uint32_t g_ui32FlashPBSize;
 
 //*****************************************************************************
 //
 // The address of the most recent parameter block in flash.
 //
 //*****************************************************************************
-static unsigned char *g_pucFlashPBCurrent;
+static uint8_t *g_pui8FlashPBCurrent;
+
+//*****************************************************************************
+//
+// The erase sector size of the current flash.
+//
+//*****************************************************************************
+#define FLASH_SECTOR_SIZE       MAP_SysCtlFlashSectorSizeGet()
 
 //*****************************************************************************
 //
 //! Determines if the parameter block at the given address is valid.
 //!
-//! \param pucOffset is the address of the parameter block to check.
+//! \param pui8Offset is the address of the parameter block to check.
 //!
 //! This function will compute the checksum of a parameter block in flash to
 //! determine if it is valid.
@@ -81,28 +94,28 @@ static unsigned char *g_pucFlashPBCurrent;
 //! \return Returns one if the parameter block is valid and zero if it is not.
 //
 //*****************************************************************************
-static unsigned long
-FlashPBIsValid(unsigned char *pucOffset)
+static uint32_t
+FlashPBIsValid(uint8_t *pui8Offset)
 {
-    unsigned long ulIdx, ulSum;
+    uint32_t ui32Idx, ui32Sum;
 
     //
     // Check the arguments.
     //
-    ASSERT(pucOffset != (void *)0);
+    ASSERT(pui8Offset != (void *)0);
 
     //
     // Loop through the bytes in the block, computing the checksum.
     //
-    for(ulIdx = 0, ulSum = 0; ulIdx < g_ulFlashPBSize; ulIdx++)
+    for(ui32Idx = 0, ui32Sum = 0; ui32Idx < g_ui32FlashPBSize; ui32Idx++)
     {
-        ulSum += pucOffset[ulIdx];
+        ui32Sum += pui8Offset[ui32Idx];
     }
 
     //
     // The checksum should be zero, so return a failure if it is not.
     //
-    if((ulSum & 255) != 0)
+    if((ui32Sum & 255) != 0)
     {
         return(0);
     }
@@ -111,7 +124,7 @@ FlashPBIsValid(unsigned char *pucOffset)
     // If the sum is equal to the size * 255, then the block is all ones and
     // should not be considered valid.
     //
-    if((g_ulFlashPBSize * 255) == ulSum)
+    if((g_ui32FlashPBSize * 255) == ui32Sum)
     {
         return(0);
     }
@@ -133,18 +146,18 @@ FlashPBIsValid(unsigned char *pucOffset)
 //! there are no valid parameter blocks in flash.
 //
 //*****************************************************************************
-unsigned char *
+uint8_t *
 FlashPBGet(void)
 {
     //
     // See if there is a valid parameter block.
     //
-    if(g_pucFlashPBCurrent)
+    if(g_pui8FlashPBCurrent)
     {
         //
         // Return the address of the most recent parameter block.
         //
-        return(g_pucFlashPBCurrent);
+        return(g_pui8FlashPBCurrent);
     }
 
     //
@@ -157,7 +170,7 @@ FlashPBGet(void)
 //
 //! Writes a new parameter block to flash.
 //!
-//! \param pucBuffer is the address of the parameter block to be written to
+//! \param pui8Buffer is the address of the parameter block to be written to
 //! flash.
 //!
 //! This function will write a parameter block to flash.  Saving the new
@@ -184,35 +197,35 @@ FlashPBGet(void)
 //
 //*****************************************************************************
 void
-FlashPBSave(unsigned char *pucBuffer)
+FlashPBSave(uint8_t *pui8Buffer)
 {
-    unsigned char *pucNew;
-    unsigned long ulIdx, ulSum;
+    uint8_t *pui8New;
+    uint32_t ui32Idx, ui32Sum;
 
     //
     // Check the arguments.
     //
-    ASSERT(pucBuffer != (void *)0);
+    ASSERT(pui8Buffer != (void *)0);
 
     //
     // See if there is a valid parameter block in flash.
     //
-    if(g_pucFlashPBCurrent)
+    if(g_pui8FlashPBCurrent)
     {
         //
         // Set the sequence number to one greater than the most recent
         // parameter block.
         //
-        pucBuffer[0] = g_pucFlashPBCurrent[0] + 1;
+        pui8Buffer[0] = g_pui8FlashPBCurrent[0] + 1;
 
         //
         // Try to write the new parameter block immediately after the most
         // recent parameter block.
         //
-        pucNew = g_pucFlashPBCurrent + g_ulFlashPBSize;
-        if(pucNew == g_pucFlashPBEnd)
+        pui8New = g_pui8FlashPBCurrent + g_ui32FlashPBSize;
+        if(pui8New == g_pui8FlashPBEnd)
         {
-            pucNew = g_pucFlashPBStart;
+            pui8New = g_pui8FlashPBStart;
         }
     }
     else
@@ -221,27 +234,27 @@ FlashPBSave(unsigned char *pucBuffer)
         // There is not a valid parameter block in flash, so set the sequence
         // number of this parameter block to zero.
         //
-        pucBuffer[0] = 0;
+        pui8Buffer[0] = 0;
 
         //
         // Try to write the new parameter block at the beginning of the flash
         // space for parameter blocks.
         //
-        pucNew = g_pucFlashPBStart;
+        pui8New = g_pui8FlashPBStart;
     }
 
     //
     // Compute the checksum of the parameter block to be written.
     //
-    for(ulIdx = 0, ulSum = 0; ulIdx < g_ulFlashPBSize; ulIdx++)
+    for(ui32Idx = 0, ui32Sum = 0; ui32Idx < g_ui32FlashPBSize; ui32Idx++)
     {
-        ulSum -= pucBuffer[ulIdx];
+        ui32Sum -= pui8Buffer[ui32Idx];
     }
 
     //
     // Store the checksum into the parameter block.
     //
-    pucBuffer[1] += ulSum;
+    pui8Buffer[1] += ui32Sum;
 
     //
     // Look for a location to store this parameter block.  This infinite loop
@@ -252,7 +265,7 @@ FlashPBSave(unsigned char *pucBuffer)
         //
         // See if this location is at the start of an erase block.
         //
-        if(((unsigned long)pucNew & 1023) == 0)
+        if(((uint32_t)pui8New & (FLASH_SECTOR_SIZE - 1)) == 0)
         {
             //
             // Erase this block of the flash.  This does not assume that the
@@ -261,16 +274,16 @@ FlashPBSave(unsigned char *pucBuffer)
             // the parameter blocks are written, this will likely never fail.
             // But, that assumption is not made in order to be safe.
             //
-            FlashErase((unsigned long)pucNew);
+            MAP_FlashErase((uint32_t)pui8New);
         }
 
         //
-        // Loop through this portion of flash to see if is all ones (i.e. it
-        // is an erased portion of flash).
+        // Loop through this portion of flash to see if is all ones (in other
+        // words, it is an erased portion of flash).
         //
-        for(ulIdx = 0; ulIdx < g_ulFlashPBSize; ulIdx++)
+        for(ui32Idx = 0; ui32Idx < g_ui32FlashPBSize; ui32Idx++)
         {
-            if(pucNew[ulIdx] != 0xff)
+            if(pui8New[ui32Idx] != 0xff)
             {
                 break;
             }
@@ -281,7 +294,7 @@ FlashPBSave(unsigned char *pucBuffer)
         // the loop since this is a good location for storing the parameter
         // block.
         //
-        if(ulIdx == g_ulFlashPBSize)
+        if(ui32Idx == g_ui32FlashPBSize)
         {
             break;
         }
@@ -289,10 +302,10 @@ FlashPBSave(unsigned char *pucBuffer)
         //
         // Increment to the next parameter block location.
         //
-        pucNew += g_ulFlashPBSize;
-        if(pucNew == g_pucFlashPBEnd)
+        pui8New += g_ui32FlashPBSize;
+        if(pui8New == g_pui8FlashPBEnd)
         {
-            pucNew = g_pucFlashPBStart;
+            pui8New = g_pui8FlashPBStart;
         }
 
         //
@@ -300,8 +313,8 @@ FlashPBSave(unsigned char *pucBuffer)
         // it will not be possible to write this parameter block.  Simply
         // return without writing it.
         //
-        if((g_pucFlashPBCurrent && (pucNew == g_pucFlashPBCurrent)) ||
-           (!g_pucFlashPBCurrent && (pucNew == g_pucFlashPBStart)))
+        if((g_pui8FlashPBCurrent && (pui8New == g_pui8FlashPBCurrent)) ||
+           (!g_pui8FlashPBCurrent && (pui8New == g_pui8FlashPBStart)))
         {
             return;
         }
@@ -310,8 +323,8 @@ FlashPBSave(unsigned char *pucBuffer)
     //
     // Write this parameter block to flash.
     //
-    FlashProgram((unsigned long *)pucBuffer, (unsigned long)pucNew,
-                 g_ulFlashPBSize);
+    MAP_FlashProgram((uint32_t *)pui8Buffer, (uint32_t)pui8New,
+                     g_ui32FlashPBSize);
 
     //
     // Compare the parameter block data to the data that should now be in
@@ -319,9 +332,9 @@ FlashPBSave(unsigned char *pucBuffer)
     // parameter block in flash as the most recent (since the current parameter
     // block failed to properly program).
     //
-    for(ulIdx = 0; ulIdx < g_ulFlashPBSize; ulIdx++)
+    for(ui32Idx = 0; ui32Idx < g_ui32FlashPBSize; ui32Idx++)
     {
-        if(pucNew[ulIdx] != pucBuffer[ulIdx])
+        if(pui8New[ui32Idx] != pui8Buffer[ui32Idx])
         {
             return;
         }
@@ -330,28 +343,28 @@ FlashPBSave(unsigned char *pucBuffer)
     //
     // The new parameter block becomes the most recent parameter block.
     //
-    g_pucFlashPBCurrent = pucNew;
+    g_pui8FlashPBCurrent = pui8New;
 }
 
 //*****************************************************************************
 //
 //! Initializes the flash parameter block.
 //!
-//! \param ulStart is the address of the flash memory to be used for storing
+//! \param ui32Start is the address of the flash memory to be used for storing
 //! flash parameter blocks; this must be the start of an erase block in the
 //! flash.
-//! \param ulEnd is the address of the end of flash memory to be used for
+//! \param ui32End is the address of the end of flash memory to be used for
 //! storing flash parameter blocks; this must be the start of an erase block in
 //! the flash (the first block that is NOT part of the flash memory to be
 //! used), or the address of the first word after the flash array if the last
 //! block of flash is to be used.
-//! \param ulSize is the size of the parameter block when stored in flash;
+//! \param ui32Size is the size of the parameter block when stored in flash;
 //! this must be a power of two less than or equal to the flash erase block
 //! size (typically 1024).
 //!
 //! This function initializes a fault-tolerant, persistent storage mechanism
 //! for a parameter block for an application.  The last several erase blocks
-//! of flash (as specified by \e ulStart and \e ulEnd are used for the
+//! of flash (as specified by \e ui32Start and \e ui32End are used for the
 //! storage; more than one erase block is required in order to be
 //! fault-tolerant.
 //!
@@ -364,25 +377,25 @@ FlashPBSave(unsigned char *pucBuffer)
 //!
 //! The portion of flash for parameter block storage is split into N
 //! equal-sized regions, where each region is the size of a parameter block
-//! (\e ulSize).  Each region is scanned to find the most recent valid
+//! (\e ui32Size).  Each region is scanned to find the most recent valid
 //! parameter block.  The region that has a valid checksum and has the highest
 //! sequence number (with special consideration given to wrapping back to zero)
 //! is considered to be the current parameter block.
 //!
 //! In order to make this efficient and effective, three conditions must be
-//! met.  The first is \e ulStart and \e ulEnd must be specified such that at
-//! least two erase blocks of flash are dedicated to parameter block storage.
-//! If not, fault tolerance can not be guaranteed since an erase of a single
-//! block will leave a window where there are no valid parameter blocks in
-//! flash.  The second condition is that the size (\e ulSize) of the parameter
-//! block must be an integral divisor of the size of an erase block of flash.
-//! If not, a parameter block will end up spanning between two erase blocks of
-//! flash, making it more difficult to manage.  The final condition is that the
-//! size of the flash dedicated to parameter blocks (\e ulEnd - \e ulStart)
-//! divided by the parameter block size (\e ulSize) must be less than or equal
-//! to 128.  If not, it will not be possible in all cases to determine which
-//! parameter block is the most recent (specifically when dealing with the
-//! sequence number wrapping back to zero).
+//! met.  The first is \e ui32Start and \e ui32End must be specified such that
+//! at least two erase blocks of flash are dedicated to parameter block
+//! storage.  If not, fault tolerance can not be guaranteed since an erase of a
+//! single block will leave a window where there are no valid parameter blocks
+//! in flash.  The second condition is that the size (\e ui32Size) of the
+//! parameter block must be an integral divisor of the size of an erase block
+//! of flash.  If not, a parameter block will end up spanning between two erase
+//! blocks of flash, making it more difficult to manage.  The final condition
+//! is that the size of the flash dedicated to parameter blocks (\e ui32End -
+//! \e ui32Start) divided by the parameter block size (\e ui32Size) must be
+//! less than or equal to 128.  If not, it will not be possible in all cases to
+//! determine which parameter block is the most recent (specifically when
+//! dealing with the sequence number wrapping back to zero).
 //!
 //! When the microcontroller is initially programmed, the flash blocks used for
 //! parameter block storage are left in an erased state.
@@ -394,56 +407,50 @@ FlashPBSave(unsigned char *pucBuffer)
 //
 //*****************************************************************************
 void
-FlashPBInit(unsigned long ulStart, unsigned long ulEnd, unsigned long ulSize)
+FlashPBInit(uint32_t ui32Start, uint32_t ui32End, uint32_t ui32Size)
 {
-    unsigned char *pucOffset, *pucCurrent;
-    unsigned char ucOne, ucTwo;
+    uint8_t *pui8Offset, *pui8Current;
+    uint8_t ui8One, ui8Two;
 
     //
     // Check the arguments.
     //
-    ASSERT((ulStart % FLASH_ERASE_SIZE) == 0);
-    ASSERT((ulEnd % FLASH_ERASE_SIZE) == 0);
-    ASSERT((FLASH_ERASE_SIZE % ulSize) == 0);
-
-    //
-    // Set the number of clocks per microsecond to enable the flash controller
-    // to properly program the flash.
-    //
-    FlashUsecSet(SysCtlClockGet() / 1000000);
+    ASSERT((ui32Start % FLASH_SECTOR_SIZE) == 0);
+    ASSERT((ui32End % FLASH_SECTOR_SIZE) == 0);
+    ASSERT((FLASH_SECTOR_SIZE % ui32Size) == 0);
 
     //
     // Save the characteristics of the flash memory to be used for storing
     // parameter blocks.
     //
-    g_pucFlashPBStart = (unsigned char *)ulStart;
-    g_pucFlashPBEnd = (unsigned char *)ulEnd;
-    g_ulFlashPBSize = ulSize;
+    g_pui8FlashPBStart = (uint8_t *)ui32Start;
+    g_pui8FlashPBEnd = (uint8_t *)ui32End;
+    g_ui32FlashPBSize = ui32Size;
 
     //
     // Loop through the portion of flash memory used for storing parameter
     // blocks.
     //
-    for(pucOffset = g_pucFlashPBStart, pucCurrent = 0;
-        pucOffset < g_pucFlashPBEnd; pucOffset += g_ulFlashPBSize)
+    for(pui8Offset = g_pui8FlashPBStart, pui8Current = 0;
+        pui8Offset < g_pui8FlashPBEnd; pui8Offset += g_ui32FlashPBSize)
     {
         //
-        // See if this is a valid parameter block (i.e. the checksum is
-        // correct).
+        // See if this is a valid parameter block (in other words, the checksum
+        // is correct).
         //
-        if(FlashPBIsValid(pucOffset))
+        if(FlashPBIsValid(pui8Offset))
         {
             //
             // See if a valid parameter block has been previously found.
             //
-            if(pucCurrent != 0)
+            if(pui8Current != 0)
             {
                 //
                 // Get the sequence numbers for the current and new parameter
                 // blocks.
                 //
-                ucOne = pucCurrent[0];
-                ucTwo = pucOffset[0];
+                ui8One = pui8Current[0];
+                ui8Two = pui8Offset[0];
 
                 //
                 // See if the sequence number for the new parameter block is
@@ -451,8 +458,8 @@ FlashPBInit(unsigned long ulStart, unsigned long ulEnd, unsigned long ulSize)
                 // straightforward since the one byte sequence number will wrap
                 // after 256 parameter blocks.
                 //
-                if(((ucOne > ucTwo) && ((ucOne - ucTwo) < 128)) ||
-                   ((ucTwo > ucOne) && ((ucTwo - ucOne) > 128)))
+                if(((ui8One > ui8Two) && ((ui8One - ui8Two) < 128)) ||
+                   ((ui8Two > ui8One) && ((ui8Two - ui8One) > 128)))
                 {
                     //
                     // The new parameter block is older than the current
@@ -467,7 +474,7 @@ FlashPBInit(unsigned long ulStart, unsigned long ulEnd, unsigned long ulSize)
             // The new parameter block is more recent than the current one, so
             // make it the new current parameter block.
             //
-            pucCurrent = pucOffset;
+            pui8Current = pui8Offset;
         }
     }
 
@@ -475,7 +482,7 @@ FlashPBInit(unsigned long ulStart, unsigned long ulEnd, unsigned long ulSize)
     // Save the address of the most recent parameter block found.  If no valid
     // parameter blocks were found, this will be a NULL pointer.
     //
-    g_pucFlashPBCurrent = pucCurrent;
+    g_pui8FlashPBCurrent = pui8Current;
 }
 
 //*****************************************************************************

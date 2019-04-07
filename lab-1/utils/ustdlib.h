@@ -2,7 +2,7 @@
 //
 // ustdlib.h - Prototypes for simple standard library functions.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,14 +18,20 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
 #ifndef __USTDLIB_H__
 #define __USTDLIB_H__
 
+//*****************************************************************************
+//
+// Include the standard C headers upon which these replacements are based.
+//
+//*****************************************************************************
 #include <stdarg.h>
+#include <time.h>
 
 //*****************************************************************************
 //
@@ -40,83 +46,29 @@ extern "C"
 
 //*****************************************************************************
 //
-//! \addtogroup ustdlib_api
-//! @{
-//
-//*****************************************************************************
-
-//*****************************************************************************
-//
-//! A structure that contains the broken down date and time.
-//
-//*****************************************************************************
-typedef struct
-{
-    //
-    //! The number of years since 0 AD.
-    //
-    unsigned short usYear;
-
-    //
-    //! The month, where January is 0 and December is 11.
-    //
-    unsigned char ucMon;
-
-    //
-    //! The day of the month.
-    //
-    unsigned char ucMday;
-
-    //
-    //! The day of the week, where Sunday is 0 and Saturday is 6.
-    //
-    unsigned char ucWday;
-
-    //
-    //! The number of hours.
-    //
-    unsigned char ucHour;
-
-    //
-    //! The number of minutes.
-    //
-    unsigned char ucMin;
-
-    //
-    //! The number of seconds.
-    //
-    unsigned char ucSec;
-}
-tTime;
-
-//*****************************************************************************
-//
-// Close the Doxygen group.
-//! @}
-//
-//*****************************************************************************
-
-//*****************************************************************************
-//
 // Prototypes for the APIs.
 //
 //*****************************************************************************
-extern int uvsnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
-                      va_list vaArgP);
-extern int usprintf(char *pcBuf, const char *pcString, ...);
-extern int usnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
+extern void ulocaltime(time_t timer, struct tm *tm);
+extern time_t umktime(struct tm *timeptr);
+extern int urand(void);
+extern int usnprintf(char * restrict s, size_t n, const char * restrict format,
                      ...);
-extern void ulocaltime(unsigned long ulTime, tTime *psTime);
-extern unsigned long umktime(tTime *psTime);
-extern int ustrlen (const char *pcStr);
-extern char *ustrncpy (char *pcDst, const char *pcSrc, int iNum);
-extern unsigned long ustrtoul(const char *pcStr, const char **ppcStrRet,
-                              int iBase);
-extern char *ustrstr(const char *pcHaystack, const char *pcNeedle);
-extern int ustrnicmp(const char *pcStr1, const char *pcStr2, int iCount);
-extern int ustrncmp(const char *pcStr1, const char *pcStr2, int iCount);
-extern int ustrcmp(const char *pcStr1, const char *pcStr2);
-extern int ustrcasecmp(const char *pcStr1, const char *pcStr2);
+extern int usprintf(char * restrict s, const char * restrict format, ...);
+extern void usrand(unsigned int seed);
+extern int ustrcasecmp(const char *s1, const char *s2);
+extern int ustrcmp(const char *s1, const char *s2);
+extern size_t ustrlen(const char *s);
+extern int ustrncasecmp(const char *s1, const char *s2, size_t n);
+extern int ustrncmp(const char *s1, const char *s2, size_t n);
+extern char *ustrncpy(char * restrict s1, const char * restrict s2, size_t n);
+extern char *ustrstr(const char *s1, const char *s2);
+extern float ustrtof(const char * restrict nptr,
+                     const char ** restrict endptr);
+extern unsigned long int ustrtoul(const char * restrict nptr,
+                                  const char ** restrict endptr, int base);
+extern int uvsnprintf(char * restrict s, size_t n,
+                      const char * restrict format, va_list arg);
 
 //*****************************************************************************
 //

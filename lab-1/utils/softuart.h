@@ -2,7 +2,7 @@
 //
 // softuart.h - Defines and macros for the SoftUART.
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -64,155 +64,155 @@ typedef struct
     //! can be set via a direct structure access or using the SoftUARTTxGPIOSet
     //! function.
     //
-    unsigned long ulTxGPIO;
+    uint32_t ui32TxGPIO;
 
     //
     //! The address of the GPIO port to be used for the Rx signal.  This member
     //! can be set via a direct structure access or using the SoftUARTRxGPIOSet
     //! function.
     //
-    unsigned long ulRxGPIOPort;
+    uint32_t ui32RxGPIOPort;
 
     //
     //! The address of the data buffer used for the transmit buffer.  This
     //! member can be set via a direct structure access or using the
     //! SoftUARTTxBufferSet function.
     //
-    unsigned char *pucTxBuffer;
+    uint8_t *pui8TxBuffer;
 
     //
     //! The address of the data buffer used for the receive buffer.  This
     //! member can be set via a direct structure access or using the
     //! SoftUARTRxBufferSet function.
     //
-    unsigned short *pusRxBuffer;
+    uint16_t *pui16RxBuffer;
 
     //
     //! The length of the transmit buffer.  This member can be set via a direct
     //! structure access or using the SoftUARTTxBufferSet function.
     //
-    unsigned short usTxBufferLen;
+    uint16_t ui16TxBufferLen;
 
     //
     //! The index into the transmit buffer of the next character to be
     //! transmitted.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned short usTxBufferRead;
+    uint16_t ui16TxBufferRead;
 
     //
     //! The index into the transmit buffer of the next location to store a
     //! character into the buffer.  This member should not be accessed or
     //! modified by the application.
     //
-    unsigned short usTxBufferWrite;
+    uint16_t ui16TxBufferWrite;
 
     //
     //! The transmit buffer level at which the transmit interrupt is asserted.
     //! This member should not be accessed or modified by the application.
     //
-    unsigned short usTxBufferLevel;
+    uint16_t ui16TxBufferLevel;
 
     //
     //! The length of the receive buffer.  This member can be set via a direct
     //! structure access or using the SoftUARTRxBufferSet function.
     //
-    unsigned short usRxBufferLen;
+    uint16_t ui16RxBufferLen;
 
     //
     //! The index into the receive buffer of the next character to be read from
     //! the buffer.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned short usRxBufferRead;
+    uint16_t ui16RxBufferRead;
 
     //
     //! The index into the receive buffer of the lcoation to store the next
     //! character received.  This member should not be accessed or modified by
     //! the application.
     //
-    unsigned short usRxBufferWrite;
+    uint16_t ui16RxBufferWrite;
 
     //
     //! The receive buffer level at which the receive interrupt is asserted.
     //! This member should not be accessed or modified by the application.
     //
-    unsigned short usRxBufferLevel;
+    uint16_t ui16RxBufferLevel;
 
     //
     //! The set of virtual interrupts that are currently asserted.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned short usIntStatus;
+    uint16_t ui16IntStatus;
 
     //
     //! The set of virtual interrupts that should be sent to the callback
     //! function.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned short usIntMask;
+    uint16_t ui16IntMask;
 
     //
     //! The configuration of the SoftUART module.  This member can be set via
     //! the SoftUARTConfigSet and SoftUARTFIFOLevelSet functions.
     //
-    unsigned short usConfig;
+    uint16_t ui16Config;
 
     //
     //! The flags that control the operation of the SoftUART module.  This
     //! member should not be be accessed or modified by the application.
     //
-    unsigned char ucFlags;
+    uint8_t ui8Flags;
 
     //
     //! The current state of the SoftUART transmit state machine.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned char ucTxState;
+    uint8_t ui8TxState;
 
     //
     //! The value that is written to the Tx pin at the start of the next
     //! transmit timer tick.  This member should not be accessed or modified
     //! by the application.
     //
-    unsigned char ucTxNext;
+    uint8_t ui8TxNext;
 
     //
     //! The character that is currently be sent via the Tx pin.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned char ucTxData;
+    uint8_t ui8TxData;
 
     //
     //! The GPIO pin to be used for the Rx signal.  This member can be set via
     //! a direct structure access or using the SoftUARTRxGPIOSet function.
     //
-    unsigned char ucRxPin;
+    uint8_t ui8RxPin;
 
     //
     //! The current state of the SoftUART receive state machine.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned char ucRxState;
+    uint8_t ui8RxState;
 
     //
     //! The character that is currently being received via the Rx pin.  This
     //! member should not be accessed or modified by the application.
     //
-    unsigned char ucRxData;
+    uint8_t ui8RxData;
 
     //
     //! The flags that indicate any errors that have occurred during the
     //! reception of the current character via the Rx pin.  This member should
     //! not be accessed or modified by the application.
     //
-    unsigned char ucRxFlags;
+    uint8_t ui8RxFlags;
 
     //
     //! The receive error status.  This member should only be accessed via the
     //! SoftUARTRxErrorGet and SoftURATRxErrorClear functions.
     //
-    unsigned char ucRxStatus;
+    uint8_t ui8RxStatus;
 }
 tSoftUART;
 
@@ -225,9 +225,9 @@ tSoftUART;
 
 //*****************************************************************************
 //
-// Values that can be passed to SoftUARTIntEnable, SoftUARTIntDisable, and
-// SoftUARTIntClear as the ulIntFlags parameter, and returned from
-// SoftUARTIntStatus.
+// Values that can be passed to SoftUARTIntEnable(), SoftUARTIntDisable(), and
+// SoftUARTIntClear() as the ui32IntFlags parameter, and returned from
+// SoftUARTIntStatus().
 //
 //*****************************************************************************
 #define SOFTUART_INT_EOT        0x800       // End of transmission interrupt
@@ -241,10 +241,11 @@ tSoftUART;
 
 //*****************************************************************************
 //
-// Values that can be passed to SoftUARTConfigSet as the ulConfig parameter and
-// returned by SoftUARTConfigGet in the pulConfig parameter.  Additionally, the
-// UART_CONFIG_PAR_* subset can be passed to SoftUARTParityModeSet as the
-// ulParity parameter, and are returned by SoftUARTParityModeGet.
+// Values that can be passed to SoftUARTConfigSet() as the ui32Config parameter
+// and returned by SoftUARTConfigGet() in the pui32Config parameter.
+// Additionally, the UART_CONFIG_PAR_* subset can be passed to
+// SoftUARTParityModeSet() as the ui32Parity parameter, and are returned by
+// SoftUARTParityModeGet().
 //
 //*****************************************************************************
 #define SOFTUART_CONFIG_WLEN_MASK                                             \
@@ -273,8 +274,8 @@ tSoftUART;
 
 //*****************************************************************************
 //
-// Values that can be passed to SoftUARTFIFOLevelSet as the ulTxLevel parameter
-// and returned by SoftUARTFIFOLevelGet in the pulTxLevel.
+// Values that can be passed to SoftUARTFIFOLevelSet() as the ui32TxLevel
+// parameter and returned by SoftUARTFIFOLevelGet() in the pui32TxLevel.
 //
 //*****************************************************************************
 #define SOFTUART_FIFO_TX1_8     0x00000000  // Transmit interrupt at 1/8 Full
@@ -285,8 +286,8 @@ tSoftUART;
 
 //*****************************************************************************
 //
-// Values that can be passed to SoftUARTFIFOLevelSet as the ulRxLevel parameter
-// and returned by SoftUARTFIFOLevelGet in the pulRxLevel.
+// Values that can be passed to SoftUARTFIFOLevelSet() as the ui32RxLevel
+// parameter and returned by SoftUARTFIFOLevelGet() in the pui32RxLevel.
 //
 //*****************************************************************************
 #define SOFTUART_FIFO_RX1_8     0x00000000  // Receive interrupt at 1/8 Full
@@ -320,47 +321,47 @@ tSoftUART;
 // API Function prototypes
 //
 //*****************************************************************************
-extern void SoftUARTInit(tSoftUART *pUART);
-extern void SoftUARTParityModeSet(tSoftUART *pUART, unsigned long ulParity);
-extern unsigned long SoftUARTParityModeGet(tSoftUART *pUART);
-extern void SoftUARTFIFOLevelSet(tSoftUART *pUART, unsigned long ulTxLevel,
-                                 unsigned long ulRxLevel);
-extern void SoftUARTFIFOLevelGet(tSoftUART *pUART, unsigned long *pulTxLevel,
-                                 unsigned long *pulRxLevel);
-extern void SoftUARTConfigSet(tSoftUART *pUART, unsigned long ulConfig);
-extern void SoftUARTConfigGet(tSoftUART *pUART, unsigned long *pulConfig);
-extern void SoftUARTEnable(tSoftUART *pUART);
-extern void SoftUARTDisable(tSoftUART *pUART);
-extern void SoftUARTFIFOEnable(tSoftUART *pUART);
-extern void SoftUARTFIFODisable(tSoftUART *pUART);
-extern tBoolean SoftUARTCharsAvail(tSoftUART *pUART);
-extern tBoolean SoftUARTSpaceAvail(tSoftUART *pUART);
-extern long SoftUARTCharGetNonBlocking(tSoftUART *pUART);
-extern long SoftUARTCharGet(tSoftUART *pUART);
-extern tBoolean SoftUARTCharPutNonBlocking(tSoftUART *pUART,
-                                           unsigned char ucData);
-extern void SoftUARTCharPut(tSoftUART *pUART, unsigned char ucData);
-extern void SoftUARTBreakCtl(tSoftUART *pUART, tBoolean bBreakState);
-extern tBoolean SoftUARTBusy(tSoftUART *pUART);
-extern void SoftUARTIntEnable(tSoftUART *pUART, unsigned long ulIntFlags);
-extern void SoftUARTIntDisable(tSoftUART *pUART, unsigned long ulIntFlags);
-extern unsigned long SoftUARTIntStatus(tSoftUART *pUART, tBoolean bMasked);
-extern void SoftUARTIntClear(tSoftUART *pUART, unsigned long ulIntFlags);
-extern unsigned long SoftUARTRxErrorGet(tSoftUART *pUART);
-extern void SoftUARTRxErrorClear(tSoftUART *pUART);
-extern unsigned long SoftUARTRxTick(tSoftUART *pUART, tBoolean bEdgeInt);
-extern void SoftUARTTxIntModeSet(tSoftUART *pUART, unsigned long ulMode);
-extern unsigned long SoftUARTTxIntModeGet(tSoftUART *pUART);
-extern void SoftUARTTxTimerTick(tSoftUART *pUART);
-extern void SoftUARTCallbackSet(tSoftUART *pUART, void (*pfnCallback)(void));
-extern void SoftUARTTxGPIOSet(tSoftUART *pUART, unsigned long ulBase,
-                              unsigned char ucPin);
-extern void SoftUARTRxGPIOSet(tSoftUART *pUART, unsigned long ulBase,
-                              unsigned char ucPin);
-extern void SoftUARTTxBufferSet(tSoftUART *pUART, unsigned char *pucTxBuffer,
-                                unsigned short usLen);
-extern void SoftUARTRxBufferSet(tSoftUART *pUART, unsigned short *pusRxBuffer,
-                                unsigned short usLen);
+extern void SoftUARTInit(tSoftUART *psUART);
+extern void SoftUARTParityModeSet(tSoftUART *psUART, uint32_t ui32Parity);
+extern uint32_t SoftUARTParityModeGet(tSoftUART *psUART);
+extern void SoftUARTFIFOLevelSet(tSoftUART *psUART, uint32_t ui32TxLevel,
+                                 uint32_t ui32RxLevel);
+extern void SoftUARTFIFOLevelGet(tSoftUART *psUART, uint32_t *pui32TxLevel,
+                                 uint32_t *pui32RxLevel);
+extern void SoftUARTConfigSet(tSoftUART *psUART, uint32_t ui32Config);
+extern void SoftUARTConfigGet(tSoftUART *psUART, uint32_t *pui32Config);
+extern void SoftUARTEnable(tSoftUART *psUART);
+extern void SoftUARTDisable(tSoftUART *psUART);
+extern void SoftUARTFIFOEnable(tSoftUART *psUART);
+extern void SoftUARTFIFODisable(tSoftUART *psUART);
+extern bool SoftUARTCharsAvail(tSoftUART *psUART);
+extern bool SoftUARTSpaceAvail(tSoftUART *psUART);
+extern int32_t SoftUARTCharGetNonBlocking(tSoftUART *psUART);
+extern int32_t SoftUARTCharGet(tSoftUART *psUART);
+extern bool SoftUARTCharPutNonBlocking(tSoftUART *psUART,
+                                           uint8_t ui8Data);
+extern void SoftUARTCharPut(tSoftUART *psUART, uint8_t ui8Data);
+extern void SoftUARTBreakCtl(tSoftUART *psUART, bool bBreakState);
+extern bool SoftUARTBusy(tSoftUART *psUART);
+extern void SoftUARTIntEnable(tSoftUART *psUART, uint32_t ui32IntFlags);
+extern void SoftUARTIntDisable(tSoftUART *psUART, uint32_t ui32IntFlags);
+extern uint32_t SoftUARTIntStatus(tSoftUART *psUART, bool bMasked);
+extern void SoftUARTIntClear(tSoftUART *psUART, uint32_t ui32IntFlags);
+extern uint32_t SoftUARTRxErrorGet(tSoftUART *psUART);
+extern void SoftUARTRxErrorClear(tSoftUART *psUART);
+extern uint32_t SoftUARTRxTick(tSoftUART *psUART, bool bEdgeInt);
+extern void SoftUARTTxIntModeSet(tSoftUART *psUART, uint32_t ui32Mode);
+extern uint32_t SoftUARTTxIntModeGet(tSoftUART *psUART);
+extern void SoftUARTTxTimerTick(tSoftUART *psUART);
+extern void SoftUARTCallbackSet(tSoftUART *psUART, void (*pfnCallback)(void));
+extern void SoftUARTTxGPIOSet(tSoftUART *psUART, uint32_t ui32Base,
+                              uint8_t ui8Pin);
+extern void SoftUARTRxGPIOSet(tSoftUART *psUART, uint32_t ui32Base,
+                              uint8_t ui8Pin);
+extern void SoftUARTTxBufferSet(tSoftUART *psUART, uint8_t *pui8TxBuffer,
+                                uint16_t ui16Len);
+extern void SoftUARTRxBufferSet(tSoftUART *psUART, uint16_t *pui16RxBuffer,
+                                uint16_t ui16Len);
 
 //*****************************************************************************
 //
@@ -371,4 +372,4 @@ extern void SoftUARTRxBufferSet(tSoftUART *pUART, unsigned short *pusRxBuffer,
 }
 #endif
 
-#endif //  __SOFTUART_H__
+#endif // __SOFTUART_H__

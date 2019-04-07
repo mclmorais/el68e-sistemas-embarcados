@@ -2,7 +2,7 @@
 //
 // cpu_usage.c - Routines to determine the CPU utilization.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,10 +18,11 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
-
+#include <stdint.h>
+#include <stdbool.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/debug.h"
@@ -44,10 +45,10 @@
 // tracking CPU utilization.
 //
 //*****************************************************************************
-static unsigned long g_pulCPUUsageTimerPeriph[4] =
+static uint32_t g_pui32CPUUsageTimerPeriph[6] =
 {
     SYSCTL_PERIPH_TIMER0, SYSCTL_PERIPH_TIMER1, SYSCTL_PERIPH_TIMER2,
-    SYSCTL_PERIPH_TIMER3
+    SYSCTL_PERIPH_TIMER3, SYSCTL_PERIPH_TIMER4, SYSCTL_PERIPH_TIMER5
 };
 
 //*****************************************************************************
@@ -56,9 +57,10 @@ static unsigned long g_pulCPUUsageTimerPeriph[4] =
 // utilization.
 //
 //*****************************************************************************
-static unsigned long g_pulCPUUsageTimerBase[4] =
+static uint32_t g_pui32CPUUsageTimerBase[6] =
 {
-    TIMER0_BASE, TIMER1_BASE, TIMER2_BASE, TIMER3_BASE
+    TIMER0_BASE, TIMER1_BASE, TIMER2_BASE, TIMER3_BASE, TIMER4_BASE,
+    TIMER5_BASE
 };
 
 //*****************************************************************************
@@ -67,14 +69,14 @@ static unsigned long g_pulCPUUsageTimerBase[4] =
 // utilization.
 //
 //*****************************************************************************
-static unsigned long g_ulCPUUsageTimer;
+static uint32_t g_ui32CPUUsageTimer;
 
 //*****************************************************************************
 //
 // The number of processor clock ticks per timing period.
 //
 //*****************************************************************************
-static unsigned long g_ulCPUUsageTicks;
+static uint32_t g_ui32CPUUsageTicks;
 
 //*****************************************************************************
 //
@@ -83,7 +85,7 @@ static unsigned long g_ulCPUUsageTicks;
 // period.
 //
 //*****************************************************************************
-static unsigned long g_ulCPUUsagePrevious;
+static uint32_t g_ui32CPUUsagePrevious;
 
 //*****************************************************************************
 //
@@ -95,44 +97,45 @@ static unsigned long g_ulCPUUsagePrevious;
 //! \return Returns the CPU usage percentage as a 16.16 fixed-point value.
 //
 //*****************************************************************************
-unsigned long
+uint32_t
 CPUUsageTick(void)
 {
-    unsigned long ulValue, ulUsage;
+    uint32_t ui32Value, ui32Usage;
 
     //
     // Get the current value of the timer.
     //
-    ulValue = MAP_TimerValueGet(g_pulCPUUsageTimerBase[g_ulCPUUsageTimer],
-                                TIMER_A);
+    ui32Value =
+        MAP_TimerValueGet(g_pui32CPUUsageTimerBase[g_ui32CPUUsageTimer],
+                          TIMER_A);
 
     //
     // Based on the number of clock ticks accumulated by the timer during the
     // previous timing period, compute the CPU usage as a 16.16 fixed-point
     // value.
     //
-    ulUsage = ((((g_ulCPUUsagePrevious - ulValue) * 6400) /
-                g_ulCPUUsageTicks) * 1024);
+    ui32Usage = ((((g_ui32CPUUsagePrevious - ui32Value) * 6400) /
+                  g_ui32CPUUsageTicks) * 1024);
 
     //
     // Save the previous value of the timer.
     //
-    g_ulCPUUsagePrevious = ulValue;
+    g_ui32CPUUsagePrevious = ui32Value;
 
     //
     // Return the new CPU usage value.
     //
-    return(ulUsage);
+    return(ui32Usage);
 }
 
 //*****************************************************************************
 //
 //! Initializes the CPU usage measurement module.
 //!
-//! \param ulClockRate is the rate of the clock supplied to the timer module.
-//! \param ulRate is the number of times per second that CPUUsageTick() is
+//! \param ui32ClockRate is the rate of the clock supplied to the timer module.
+//! \param ui32Rate is the number of times per second that CPUUsageTick() is
 //! called.
-//! \param ulTimer is the index of the timer module to use.
+//! \param ui32Timer is the index of the timer module to use.
 //!
 //! This function prepares the CPU usage measurement module for measuring the
 //! CPU usage of the application.
@@ -141,29 +144,28 @@ CPUUsageTick(void)
 //
 //*****************************************************************************
 void
-CPUUsageInit(unsigned long ulClockRate, unsigned long ulRate,
-             unsigned long ulTimer)
+CPUUsageInit(uint32_t ui32ClockRate, uint32_t ui32Rate, uint32_t ui32Timer)
 {
     //
     // Check the arguments.
     //
-    ASSERT(ulClockRate > ulRate);
-    ASSERT(ulTimer < 4);
+    ASSERT(ui32ClockRate > ui32Rate);
+    ASSERT(ui32Timer < 6);
 
     //
     // Save the timer index.
     //
-    g_ulCPUUsageTimer = ulTimer;
+    g_ui32CPUUsageTimer = ui32Timer;
 
     //
     // Determine the number of system clocks per measurement period.
     //
-    g_ulCPUUsageTicks = ulClockRate / ulRate;
+    g_ui32CPUUsageTicks = ui32ClockRate / ui32Rate;
 
     //
     // Set the previous value of the timer to the initial timer value.
     //
-    g_ulCPUUsagePrevious = 0xffffffff;
+    g_ui32CPUUsagePrevious = 0xffffffff;
 
     //
     // Enable peripheral clock gating.
@@ -175,24 +177,25 @@ CPUUsageInit(unsigned long ulClockRate, unsigned long ulRate,
     // it in sleep mode.  It will therefore count system clocks when the
     // processor is running but not when it is sleeping.
     //
-    MAP_SysCtlPeripheralEnable(g_pulCPUUsageTimerPeriph[ulTimer]);
-    MAP_SysCtlPeripheralSleepDisable(g_pulCPUUsageTimerPeriph[ulTimer]);
+    MAP_SysCtlPeripheralEnable(g_pui32CPUUsageTimerPeriph[ui32Timer]);
+    MAP_SysCtlPeripheralSleepDisable(g_pui32CPUUsageTimerPeriph[ui32Timer]);
 
     //
     // Configure the third timer for 32-bit periodic operation.
     //
-    MAP_TimerConfigure(g_pulCPUUsageTimerBase[ulTimer], TIMER_CFG_PERIODIC);
+    MAP_TimerConfigure(g_pui32CPUUsageTimerBase[ui32Timer],
+                       TIMER_CFG_PERIODIC);
 
     //
     // Set the load value for the third timer to the maximum value.
     //
-    MAP_TimerLoadSet(g_pulCPUUsageTimerBase[ulTimer], TIMER_A, 0xffffffff);
+    MAP_TimerLoadSet(g_pui32CPUUsageTimerBase[ui32Timer], TIMER_A, 0xffffffff);
 
     //
     // Enable the third timer.  It will now count the number of system clocks
     // during which the processor is executing code.
     //
-    MAP_TimerEnable(g_pulCPUUsageTimerBase[ulTimer], TIMER_A);
+    MAP_TimerEnable(g_pui32CPUUsageTimerBase[ui32Timer], TIMER_A);
 }
 
 //*****************************************************************************

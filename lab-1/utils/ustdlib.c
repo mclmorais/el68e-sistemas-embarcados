@@ -2,7 +2,7 @@
 //
 // ustdlib.c - Simple standard library functions.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,11 +18,11 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
-#include <string.h>
+#include <stdint.h>
 #include "driverlib/debug.h"
 #include "utils/ustdlib.h"
 
@@ -45,60 +45,62 @@ static const char * const g_pcHex = "0123456789abcdef";
 //
 //! Copies a certain number of characters from one string to another.
 //!
-//! \param pcDst is a pointer to the destination buffer into which characters
-//!   are to be copied.
-//! \param pcSrc is a pointer to the string from which characters are to be
-//!   copied.
-//! \param iNum is the number of characters to copy to the destination buffer.
+//! \param s1 is a pointer to the destination buffer into which characters
+//! are to be copied.
+//! \param s2 is a pointer to the string from which characters are to be
+//! copied.
+//! \param n is the number of characters to copy to the destination buffer.
 //!
-//! This function copies at most \e iNum characters from the string pointed to
-//! by \e pcSrc into the buffer pointed to by \e pcDst.  If the end of \e
-//! pcSrc is found before \e iNum characters have been copied, remaining
-//! characters in \e pcDst will be padded with zeroes until \e iNum characters
-//! have been written.  Note that the destination string will only be NULL
-//! terminated if the number of characters to be copied is greater than the
-//! length of \e pcSrc.
+//! This function copies at most \e n characters from the string pointed to
+//! by \e s2 into the buffer pointed to by \e s1.  If the end of \e s2 is found
+//! before \e n characters have been copied, remaining characters in \e s1
+//! will be padded with zeroes until \e n characters have been written.  Note
+//! that the destination string will only be NULL terminated if the number of
+//! characters to be copied is greater than the length of \e s2.
 //!
-//! \return Returns \e pcDst.
+//! \return Returns \e s1.
 //
 //*****************************************************************************
 char *
-ustrncpy (char *pcDst, const char *pcSrc, int iNum)
+ustrncpy(char * restrict s1, const char * restrict s2, size_t n)
 {
-    int iCount;
+    size_t count;
 
-    ASSERT(pcSrc);
-    ASSERT(pcDst);
+    //
+    // Check the arguments.
+    //
+    ASSERT(s1);
+    ASSERT(s2);
 
     //
     // Start at the beginning of the source string.
     //
-    iCount = 0;
+    count = 0;
 
     //
     // Copy the source string until we run out of source characters or
     // destination space.
     //
-    while(iNum && pcSrc[iCount])
+    while(n && s2[count])
     {
-        pcDst[iCount] = pcSrc[iCount];
-        iCount++;
-        iNum--;
+        s1[count] = s2[count];
+        count++;
+        n--;
     }
 
     //
     // Pad the destination if we are not yet done.
     //
-    while(iNum)
+    while(n)
     {
-        pcDst[iCount++] = (char)0;
-        iNum--;
+        s1[count++] = (char)0;
+        n--;
     }
 
     //
     // Pass the destination pointer back to the caller.
     //
-    return(pcDst);
+    return(s1);
 }
 
 //*****************************************************************************
@@ -106,10 +108,10 @@ ustrncpy (char *pcDst, const char *pcSrc, int iNum)
 //! A simple vsnprintf function supporting \%c, \%d, \%p, \%s, \%u, \%x, and
 //! \%X.
 //!
-//! \param pcBuf points to the buffer where the converted string is stored.
-//! \param ulSize is the size of the buffer.
-//! \param pcString is the format string.
-//! \param vaArgP is the list of optional arguments, which depend on the
+//! \param s points to the buffer where the converted string is stored.
+//! \param n is the size of the buffer.
+//! \param format is the format string.
+//! \param arg is the list of optional arguments, which depend on the
 //! contents of the format string.
 //!
 //! This function is very similar to the C library <tt>vsnprintf()</tt>
@@ -133,14 +135,14 @@ ustrncpy (char *pcDst, const char *pcSrc, int iNum)
 //! added to reach eight; ``\%08d'' will use eight characters as well but will
 //! add zeroes instead of spaces.
 //!
-//! The type of the arguments after \e pcString must match the requirements of
+//! The type of the arguments after \e format must match the requirements of
 //! the format string.  For example, if an integer was passed where a string
 //! was expected, an error of some kind will most likely occur.
 //!
-//! The \e ulSize parameter limits the number of characters that will be stored
-//! in the buffer pointed to by \e pcBuf to prevent the possibility of a buffer
-//! overflow.  The buffer size should be large enough to hold the expected
-//! converted output string, including the null termination character.
+//! The \e n parameter limits the number of characters that will be
+//! stored  in the buffer pointed to by \e s to prevent the possibility of
+//! a buffer  overflow.  The buffer size should be large enough to hold the
+//! expected converted output string, including the null termination character.
 //!
 //! The function will return the number of characters that would be converted
 //! as if there were no limit on the buffer size.  Therefore it is possible for
@@ -153,8 +155,8 @@ ustrncpy (char *pcDst, const char *pcSrc, int iNum)
 //
 //*****************************************************************************
 int
-uvsnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
-           va_list vaArgP)
+uvsnprintf(char * restrict s, size_t n, const char * restrict format,
+           va_list arg)
 {
     unsigned long ulIdx, ulValue, ulCount, ulBase, ulNeg;
     char *pcStr, cFill;
@@ -163,16 +165,16 @@ uvsnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
     //
     // Check the arguments.
     //
-    ASSERT(pcString != 0);
-    ASSERT(pcBuf != 0);
-    ASSERT(ulSize != 0);
+    ASSERT(s);
+    ASSERT(n);
+    ASSERT(format);
 
     //
     // Adjust buffer size limit to allow one space for null termination.
     //
-    if(ulSize)
+    if(n)
     {
-        ulSize--;
+        n--;
     }
 
     //
@@ -183,12 +185,12 @@ uvsnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
     //
     // Loop while there are more characters in the format string.
     //
-    while(*pcString)
+    while(*format)
     {
         //
         // Find the first non-% character, or the end of the string.
         //
-        for(ulIdx = 0; (pcString[ulIdx] != '%') && (pcString[ulIdx] != '\0');
+        for(ulIdx = 0; (format[ulIdx] != '%') && (format[ulIdx] != '\0');
             ulIdx++)
         {
         }
@@ -198,17 +200,17 @@ uvsnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
         // more characters to write than there is space in the buffer, then
         // only write as much as will fit in the buffer.
         //
-        if(ulIdx > ulSize)
+        if(ulIdx > n)
         {
-            ustrncpy(pcBuf, pcString, ulSize);
-            pcBuf += ulSize;
-            ulSize = 0;
+            ustrncpy(s, format, n);
+            s += n;
+            n = 0;
         }
         else
         {
-            ustrncpy(pcBuf, pcString, ulIdx);
-            pcBuf += ulIdx;
-            ulSize -= ulIdx;
+            ustrncpy(s, format, ulIdx);
+            s += ulIdx;
+            n -= ulIdx;
         }
 
         //
@@ -221,17 +223,17 @@ uvsnprintf(char *pcBuf, unsigned long ulSize, const char *pcString,
         //
         // Skip the portion of the format string that was written.
         //
-        pcString += ulIdx;
+        format += ulIdx;
 
         //
         // See if the next character is a %.
         //
-        if(*pcString == '%')
+        if(*format == '%')
         {
             //
             // Skip the %.
             //
-            pcString++;
+            format++;
 
             //
             // Set the digit count to zero, and the fill character to space
@@ -250,7 +252,7 @@ again:
             //
             // Determine how to handle the next character.
             //
-            switch(*pcString++)
+            switch(*format++)
             {
                 //
                 // Handle the digit characters.
@@ -270,7 +272,7 @@ again:
                     // If this is a zero, and it is the first digit, then the
                     // fill character is a zero instead of a space.
                     //
-                    if((pcString[-1] == '0') && (ulCount == 0))
+                    if((format[-1] == '0') && (ulCount == 0))
                     {
                         cFill = '0';
                     }
@@ -279,7 +281,7 @@ again:
                     // Update the digit count.
                     //
                     ulCount *= 10;
-                    ulCount += pcString[-1] - '0';
+                    ulCount += format[-1] - '0';
 
                     //
                     // Get the next character.
@@ -295,16 +297,16 @@ again:
                     //
                     // Get the value from the varargs.
                     //
-                    ulValue = va_arg(vaArgP, unsigned long);
+                    ulValue = va_arg(arg, unsigned long);
 
                     //
                     // Copy the character to the output buffer, if there is
                     // room.  Update the buffer size remaining.
                     //
-                    if(ulSize != 0)
+                    if(n != 0)
                     {
-                        *pcBuf++ = (char)ulValue;
-                        ulSize--;
+                        *s++ = (char)ulValue;
+                        n--;
                     }
 
                     //
@@ -327,7 +329,7 @@ again:
                     //
                     // Get the value from the varargs.
                     //
-                    ulValue = va_arg(vaArgP, unsigned long);
+                    ulValue = va_arg(arg, unsigned long);
 
                     //
                     // If the value is negative, make it positive and indicate
@@ -373,7 +375,7 @@ again:
                     //
                     // Get the string pointer from the varargs.
                     //
-                    pcStr = va_arg(vaArgP, char *);
+                    pcStr = va_arg(arg, char *);
 
                     //
                     // Determine the length of the string.
@@ -397,17 +399,17 @@ again:
                     // as will fit in the buffer.  Update the output buffer
                     // pointer and the space remaining.
                     //
-                    if(ulIdx > ulSize)
+                    if(ulIdx > n)
                     {
-                        ustrncpy(pcBuf, pcStr, ulSize);
-                        pcBuf += ulSize;
-                        ulSize = 0;
+                        ustrncpy(s, pcStr, n);
+                        s += n;
+                        n = 0;
                     }
                     else
                     {
-                        ustrncpy(pcBuf, pcStr, ulIdx);
-                        pcBuf += ulIdx;
-                        ulSize -= ulIdx;
+                        ustrncpy(s, pcStr, ulIdx);
+                        s += ulIdx;
+                        n -= ulIdx;
 
                         //
                         // Write any required padding spaces assuming there is
@@ -416,15 +418,15 @@ again:
                         if(ulCount > ulIdx)
                         {
                             ulCount -= ulIdx;
-                            if(ulCount > ulSize)
+                            if(ulCount > n)
                             {
-                                ulCount = ulSize;
+                                ulCount = n;
                             }
-                            ulSize =- ulCount;
+                            n = -ulCount;
 
                             while(ulCount--)
                             {
-                                *pcBuf++ = ' ';
+                                *s++ = ' ';
                             }
                         }
                     }
@@ -450,7 +452,7 @@ again:
                     //
                     // Get the value from the varargs.
                     //
-                    ulValue = va_arg(vaArgP, unsigned long);
+                    ulValue = va_arg(arg, unsigned long);
 
                     //
                     // Set the base to 10.
@@ -482,7 +484,7 @@ again:
                     //
                     // Get the value from the varargs.
                     //
-                    ulValue = va_arg(vaArgP, unsigned long);
+                    ulValue = va_arg(arg, unsigned long);
 
                     //
                     // Set the base to 16.
@@ -520,13 +522,13 @@ convert:
                     // If the value is negative and the value is padded with
                     // zeros, then place the minus sign before the padding.
                     //
-                    if(ulNeg && (ulSize != 0) && (cFill == '0'))
+                    if(ulNeg && (n != 0) && (cFill == '0'))
                     {
                         //
                         // Place the minus sign in the output buffer.
                         //
-                        *pcBuf++ = '-';
-                        ulSize--;
+                        *s++ = '-';
+                        n--;
 
                         //
                         // Update the conversion count.
@@ -555,10 +557,10 @@ convert:
                             // Copy the character to the output buffer if there
                             // is room.
                             //
-                            if(ulSize != 0)
+                            if(n != 0)
                             {
-                                *pcBuf++ = cFill;
-                                ulSize--;
+                                *s++ = cFill;
+                                n--;
                             }
 
                             //
@@ -572,13 +574,13 @@ convert:
                     // If the value is negative, then place the minus sign
                     // before the number.
                     //
-                    if(ulNeg && (ulSize != 0))
+                    if(ulNeg && (n != 0))
                     {
                         //
                         // Place the minus sign in the output buffer.
                         //
-                        *pcBuf++ = '-';
-                        ulSize--;
+                        *s++ = '-';
+                        n--;
 
                         //
                         // Update the conversion count.
@@ -595,10 +597,10 @@ convert:
                         // Copy the character to the output buffer if there is
                         // room.
                         //
-                        if(ulSize != 0)
+                        if(n != 0)
                         {
-                            *pcBuf++ = g_pcHex[(ulValue / ulIdx) % ulBase];
-                            ulSize--;
+                            *s++ = g_pcHex[(ulValue / ulIdx) % ulBase];
+                            n--;
                         }
 
                         //
@@ -621,10 +623,10 @@ convert:
                     //
                     // Simply write a single %.
                     //
-                    if(ulSize != 0)
+                    if(n != 0)
                     {
-                        *pcBuf++ = pcString[-1];
-                        ulSize--;
+                        *s++ = format[-1];
+                        n--;
                     }
 
                     //
@@ -646,17 +648,17 @@ convert:
                     //
                     // Indicate an error.
                     //
-                    if(ulSize >= 5)
+                    if(n >= 5)
                     {
-                        ustrncpy(pcBuf, "ERROR", 5);
-                        pcBuf += 5;
-                        ulSize -= 5;
+                        ustrncpy(s, "ERROR", 5);
+                        s += 5;
+                        n -= 5;
                     }
                     else
                     {
-                        ustrncpy(pcBuf, "ERROR", ulSize);
-                        pcBuf += ulSize;
-                        ulSize = 0;
+                        ustrncpy(s, "ERROR", n);
+                        s += n;
+                        n = 0;
                     }
 
                     //
@@ -676,7 +678,7 @@ convert:
     //
     // Null terminate the string in the buffer.
     //
-    *pcBuf = 0;
+    *s = 0;
 
     //
     // Return the number of characters in the full converted string.
@@ -688,8 +690,8 @@ convert:
 //
 //! A simple sprintf function supporting \%c, \%d, \%p, \%s, \%u, \%x, and \%X.
 //!
-//! \param pcBuf is the buffer where the converted string is stored.
-//! \param pcString is the format string.
+//! \param s is the buffer where the converted string is stored.
+//! \param format is the format string.
 //! \param ... are the optional arguments, which depend on the contents of the
 //! format string.
 //!
@@ -714,11 +716,11 @@ convert:
 //! added to reach eight; ``\%08d'' will use eight characters as well but will
 //! add zeros instead of spaces.
 //!
-//! The type of the arguments after \e pcString must match the requirements of
+//! The type of the arguments after \e format must match the requirements of
 //! the format string.  For example, if an integer was passed where a string
 //! was expected, an error of some kind will most likely occur.
 //!
-//! The caller must ensure that the buffer \e pcBuf is large enough to hold the
+//! The caller must ensure that the buffer \e s is large enough to hold the
 //! entire converted string, including the null termination character.
 //!
 //! \return Returns the count of characters that were written to the output
@@ -726,31 +728,31 @@ convert:
 //
 //*****************************************************************************
 int
-usprintf(char *pcBuf, const char *pcString, ...)
+usprintf(char * restrict s, const char *format, ...)
 {
-    va_list vaArgP;
-    int iRet;
+    va_list arg;
+    int ret;
 
     //
     // Start the varargs processing.
     //
-    va_start(vaArgP, pcString);
+    va_start(arg, format);
 
     //
     // Call vsnprintf to perform the conversion.  Use a large number for the
     // buffer size.
     //
-    iRet = uvsnprintf(pcBuf, 0xffff, pcString, vaArgP);
+    ret = uvsnprintf(s, 0xffff, format, arg);
 
     //
     // End the varargs processing.
     //
-    va_end(vaArgP);
+    va_end(arg);
 
     //
     // Return the conversion count.
     //
-    return(iRet);
+    return(ret);
 }
 
 //*****************************************************************************
@@ -758,9 +760,9 @@ usprintf(char *pcBuf, const char *pcString, ...)
 //! A simple snprintf function supporting \%c, \%d, \%p, \%s, \%u, \%x, and
 //! \%X.
 //!
-//! \param pcBuf is the buffer where the converted string is stored.
-//! \param ulSize is the size of the buffer.
-//! \param pcString is the format string.
+//! \param s is the buffer where the converted string is stored.
+//! \param n is the size of the buffer.
+//! \param format is the format string.
 //! \param ... are the optional arguments, which depend on the contents of the
 //! format string.
 //!
@@ -785,12 +787,12 @@ usprintf(char *pcBuf, const char *pcString, ...)
 //! added to reach eight; ``\%08d'' will use eight characters as well but will
 //! add zeros instead of spaces.
 //!
-//! The type of the arguments after \e pcString must match the requirements of
+//! The type of the arguments after \e format must match the requirements of
 //! the format string.  For example, if an integer was passed where a string
 //! was expected, an error of some kind will most likely occur.
 //!
-//! The function will copy at most \e ulSize - 1 characters into the buffer
-//! \e pcBuf.  One space is reserved in the buffer for the null termination
+//! The function will copy at most \e n - 1 characters into the buffer
+//! \e s.  One space is reserved in the buffer for the null termination
 //! character.
 //!
 //! The function will return the number of characters that would be converted
@@ -804,30 +806,30 @@ usprintf(char *pcBuf, const char *pcString, ...)
 //
 //*****************************************************************************
 int
-usnprintf(char *pcBuf, unsigned long ulSize, const char *pcString, ...)
+usnprintf(char * restrict s, size_t n, const char * restrict format, ...)
 {
-    int iRet;
-    va_list vaArgP;
+    va_list arg;
+    int ret;
 
     //
     // Start the varargs processing.
     //
-    va_start(vaArgP, pcString);
+    va_start(arg, format);
 
     //
     // Call vsnprintf to perform the conversion.
     //
-    iRet = uvsnprintf(pcBuf, ulSize, pcString, vaArgP);
+    ret = uvsnprintf(s, n, format, arg);
 
     //
     // End the varargs processing.
     //
-    va_end(vaArgP);
+    va_end(arg);
 
     //
     // Return the conversion count.
     //
-    return(iRet);
+    return(ret);
 }
 
 //*****************************************************************************
@@ -836,7 +838,7 @@ usnprintf(char *pcBuf, unsigned long ulSize, const char *pcString, ...)
 // month of the year, in a non-leap year.
 //
 //*****************************************************************************
-static const short g_psDaysToMonth[12] =
+static const time_t g_psDaysToMonth[12] =
 {
     0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
 };
@@ -845,8 +847,8 @@ static const short g_psDaysToMonth[12] =
 //
 //! Converts from seconds to calendar date and time.
 //!
-//! \param ulTime is the number of seconds.
-//! \param psTime is a pointer to the time structure that is filled in with the
+//! \param timer is the number of seconds.
+//! \param tm is a pointer to the time structure that is filled in with the
 //! broken down date and time.
 //!
 //! This function converts a number of seconds since midnight GMT on January 1,
@@ -857,35 +859,35 @@ static const short g_psDaysToMonth[12] =
 //
 //*****************************************************************************
 void
-ulocaltime(unsigned long ulTime, tTime *psTime)
+ulocaltime(time_t timer, struct tm *tm)
 {
-    unsigned long ulTemp, ulMonths;
+    time_t temp, months;
 
     //
     // Extract the number of seconds, converting time to the number of minutes.
     //
-    ulTemp = ulTime / 60;
-    psTime->ucSec = ulTime - (ulTemp * 60);
-    ulTime = ulTemp;
+    temp = timer / 60;
+    tm->tm_sec = timer - (temp * 60);
+    timer = temp;
 
     //
     // Extract the number of minutes, converting time to the number of hours.
     //
-    ulTemp = ulTime / 60;
-    psTime->ucMin = ulTime - (ulTemp * 60);
-    ulTime = ulTemp;
+    temp = timer / 60;
+    tm->tm_min = timer - (temp * 60);
+    timer = temp;
 
     //
     // Extract the number of hours, converting time to the number of days.
     //
-    ulTemp = ulTime / 24;
-    psTime->ucHour = ulTime - (ulTemp * 24);
-    ulTime = ulTemp;
+    temp = timer / 24;
+    tm->tm_hour = timer - (temp * 24);
+    timer = temp;
 
     //
     // Compute the day of the week.
     //
-    psTime->ucWday = (ulTime + 4) % 7;
+    tm->tm_wday = (timer + 4) % 7;
 
     //
     // Compute the number of leap years that have occurred since 1968, the
@@ -893,40 +895,40 @@ ulocaltime(unsigned long ulTime, tTime *psTime)
     // month loop below at March so that the leap day is classified as February
     // 29 followed by March 1, instead of March 1 followed by another March 1.
     //
-    ulTime += 366 + 365;
-    ulTemp = ulTime / ((4 * 365) + 1);
-    if((ulTime - (ulTemp * ((4 * 365) + 1))) > (31 + 28))
+    timer += 366 + 365;
+    temp = timer / ((4 * 365) + 1);
+    if((timer - (temp * ((4 * 365) + 1))) > (31 + 28))
     {
-        ulTemp++;
-        ulMonths = 12;
+        temp++;
+        months = 12;
     }
     else
     {
-        ulMonths = 2;
+        months = 2;
     }
 
     //
     // Extract the year.
     //
-    psTime->usYear = ((ulTime - ulTemp) / 365) + 1968;
-    ulTime -= ((psTime->usYear - 1968) * 365) + ulTemp;
+    tm->tm_year = ((timer - temp) / 365) + 68;
+    timer -= ((tm->tm_year - 68) * 365) + temp;
 
     //
     // Extract the month.
     //
-    for(ulTemp = 0; ulTemp < ulMonths; ulTemp++)
+    for(temp = 0; temp < months; temp++)
     {
-        if(g_psDaysToMonth[ulTemp] > ulTime)
+        if(g_psDaysToMonth[temp] > timer)
         {
             break;
         }
     }
-    psTime->ucMon = ulTemp - 1;
+    tm->tm_mon = temp - 1;
 
     //
     // Extract the day of the month.
     //
-    psTime->ucMday = ulTime - g_psDaysToMonth[ulTemp - 1] + 1;
+    tm->tm_mday = timer - g_psDaysToMonth[temp - 1] + 1;
 }
 
 //*****************************************************************************
@@ -934,72 +936,72 @@ ulocaltime(unsigned long ulTime, tTime *psTime)
 //! Compares two time structures and determines if one is greater than,
 //! less than, or equal to the other.
 //!
-//! \param pTime1 is the first time structure to compare.
-//! \param pTime2 is the second time structure to compare.
+//! \param t1 is the first time structure to compare.
+//! \param t2 is the second time structure to compare.
 //!
 //! This function compares two time structures and returns a signed number
 //! to indicate the result of the comparison.  If the time represented by
-//! \e pTime1 is greater than the time represented by \e pTime2 then a positive
-//! number is returned.  Likewise if \e pTime1 is less than \e pTime2 then a
+//! \e t1 is greater than the time represented by \e t2 then a positive
+//! number is returned.  Likewise if \e t1 is less than \e t2 then a
 //! negative number is returned.  If the two times are equal then the function
 //! returns 0.
 //!
-//! \return Returns 0 if the two times are equal, +1 if \e pTime1 is greater
-//! than \e pTime2, and -1 if \e pTime1 is less than \e pTime2.
+//! \return Returns 0 if the two times are equal, +1 if \e t1 is greater
+//! than \e t2, and -1 if \e t1 is less than \e t2.
 //
 //*****************************************************************************
 static int
-ucmptime(tTime *pTime1, tTime *pTime2)
+ucmptime(struct tm *t1, struct tm *t2)
 {
     //
     // Compare each field in descending signficance to determine if
     // greater than, less than, or equal.
     //
-    if(pTime1->usYear > pTime2->usYear)
+    if(t1->tm_year > t2->tm_year)
     {
         return(1);
     }
-    else if(pTime1->usYear < pTime2->usYear)
+    else if(t1->tm_year < t2->tm_year)
     {
         return(-1);
     }
-    else if(pTime1->ucMon > pTime2->ucMon)
+    else if(t1->tm_mon > t2->tm_mon)
     {
         return(1);
     }
-    else if(pTime1->ucMon < pTime2->ucMon)
+    else if(t1->tm_mon < t2->tm_mon)
     {
         return(-1);
     }
-    else if(pTime1->ucMday > pTime2->ucMday)
+    else if(t1->tm_mday > t2->tm_mday)
     {
         return(1);
     }
-    else if(pTime1->ucMday < pTime2->ucMday)
+    else if(t1->tm_mday < t2->tm_mday)
     {
         return(-1);
     }
-    else if(pTime1->ucHour > pTime2->ucHour)
+    else if(t1->tm_hour > t2->tm_hour)
     {
         return(1);
     }
-    else if(pTime1->ucHour < pTime2->ucHour)
+    else if(t1->tm_hour < t2->tm_hour)
     {
         return(-1);
     }
-    else if(pTime1->ucMin > pTime2->ucMin)
+    else if(t1->tm_min > t2->tm_min)
     {
         return(1);
     }
-    else if(pTime1->ucMin < pTime2->ucMin)
+    else if(t1->tm_min < t2->tm_min)
     {
         return(-1);
     }
-    else if(pTime1->ucSec > pTime2->ucSec)
+    else if(t1->tm_sec > t2->tm_sec)
     {
         return(1);
     }
-    else if(pTime1->ucSec < pTime2->ucSec)
+    else if(t1->tm_sec < t2->tm_sec)
     {
         return(-1);
     }
@@ -1017,21 +1019,21 @@ ucmptime(tTime *pTime1, tTime *pTime2)
 //
 //! Converts calendar date and time to seconds.
 //!
-//! \param psTime is a pointer to the time structure that is filled in with the
-//! broken down date and time.
+//! \param timeptr is a pointer to the time structure that is filled in with
+//! the broken down date and time.
 //!
-//! This function converts the date and time represented by the \e psTime
+//! This function converts the date and time represented by the \e timeptr
 //! structure pointer to the number of seconds since midnight GMT on January 1,
 //! 1970 (traditional Unix epoch).
 //!
 //! \return Returns the calendar time and date as seconds.  If the conversion
-//! was not possible then the function returns (unsigned long)(-1).
+//! was not possible then the function returns (uint32_t)(-1).
 //
 //*****************************************************************************
-unsigned long
-umktime(tTime *psTime)
+time_t
+umktime(struct tm *timeptr)
 {
-    tTime sTimeGuess;
+    struct tm sTimeGuess;
     unsigned long ulTimeGuess = 0x80000000;
     unsigned long ulAdjust = 0x40000000;
     int iSign;
@@ -1040,7 +1042,7 @@ umktime(tTime *psTime)
     // Seed the binary search with the first guess.
     //
     ulocaltime(ulTimeGuess, &sTimeGuess);
-    iSign = ucmptime(psTime, &sTimeGuess);
+    iSign = ucmptime(timeptr, &sTimeGuess);
 
     //
     // While the time is not yet found, execute a binary search.
@@ -1051,8 +1053,8 @@ umktime(tTime *psTime)
         // Adjust the time guess up or down depending on the result of the
         // last compare.
         //
-        ulTimeGuess = (iSign > 0) ? (ulTimeGuess + ulAdjust) :
-                                    (ulTimeGuess - ulAdjust);
+        ulTimeGuess = ((iSign > 0) ? (ulTimeGuess + ulAdjust) :
+                       (ulTimeGuess - ulAdjust));
         ulAdjust /= 2;
 
         //
@@ -1060,8 +1062,8 @@ umktime(tTime *psTime)
         // function parameters.
         //
         ulocaltime(ulTimeGuess, &sTimeGuess);
-        iSign = ucmptime(psTime, &sTimeGuess);
-    };
+        iSign = ucmptime(timeptr, &sTimeGuess);
+    }
 
     //
     // If the above loop was exited with iSign == 0, that means that the
@@ -1085,10 +1087,10 @@ umktime(tTime *psTime)
 //
 //! Converts a string into its numeric equivalent.
 //!
-//! \param pcStr is a pointer to the string containing the integer.
-//! \param ppcStrRet is a pointer that will be set to the first character past
+//! \param nptr is a pointer to the string containing the integer.
+//! \param endptr is a pointer that will be set to the first character past
 //! the integer in the string.
-//! \param iBase is the radix to use for the conversion; can be zero to
+//! \param base is the radix to use for the conversion; can be zero to
 //! auto-select the radix or between 2 and 16 to explicitly specify the radix.
 //!
 //! This function is very similar to the C library <tt>strtoul()</tt> function.
@@ -1099,7 +1101,7 @@ umktime(tTime *psTime)
 //
 //*****************************************************************************
 unsigned long
-ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
+ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
 {
     unsigned long ulRet, ulDigit, ulNeg, ulValid;
     const char *pcPtr;
@@ -1107,8 +1109,8 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
     //
     // Check the arguments.
     //
-    ASSERT(pcStr);
-    ASSERT((iBase == 0) || ((iBase > 1) && (iBase <= 16)));
+    ASSERT(nptr);
+    ASSERT((base == 0) || ((base > 1) && (base <= 16)));
 
     //
     // Initially, the result is zero.
@@ -1120,7 +1122,7 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
     //
     // Skip past any leading white space.
     //
-    pcPtr = pcStr;
+    pcPtr = nptr;
     while((*pcPtr == ' ') || (*pcPtr == '\t'))
     {
         pcPtr++;
@@ -1143,7 +1145,7 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
     // See if the radix was not specified, or is 16, and the value starts with
     // "0x" or "0X" (to indicate a hex value).
     //
-    if(((iBase == 0) || (iBase == 16)) && (*pcPtr == '0') &&
+    if(((base == 0) || (base == 16)) && (*pcPtr == '0') &&
        ((pcPtr[1] == 'x') || (pcPtr[1] == 'X')))
     {
         //
@@ -1154,13 +1156,13 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
         //
         // Set the radix to 16.
         //
-        iBase = 16;
+        base = 16;
     }
 
     //
     // See if the radix was not specified.
     //
-    if(iBase == 0)
+    if(base == 0)
     {
         //
         // See if the value starts with "0".
@@ -1170,14 +1172,14 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
             //
             // Values that start with "0" are assumed to be radix 8.
             //
-            iBase = 8;
+            base = 8;
         }
         else
         {
             //
             // Otherwise, the values are assumed to be radix 10.
             //
-            iBase = 10;
+            base = 10;
         }
     }
 
@@ -1233,7 +1235,7 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
         //
         // See if this digit is valid for the chosen radix.
         //
-        if(ulDigit >= iBase)
+        if(ulDigit >= base)
         {
             //
             // Since this was not a valid digit, move the pointer back to the
@@ -1250,7 +1252,7 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
         //
         // Add this digit to the converted value.
         //
-        ulRet *= iBase;
+        ulRet *= base;
         ulRet += ulDigit;
 
         //
@@ -1262,9 +1264,9 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
     //
     // Set the return string pointer to the first character not consumed.
     //
-    if(ppcStrRet)
+    if(endptr)
     {
-        *ppcStrRet = ulValid ? pcPtr : pcStr;
+        *endptr = ulValid ? pcPtr : nptr;
     }
 
     //
@@ -1275,9 +1277,215 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
 
 //*****************************************************************************
 //
-//! Retruns the length of a null-terminated string.
+// An array of the value of ten raised to the power-of-two exponents.  This is
+// used for converting the decimal exponent into the floating-point value of
+// 10^exp.
+//
+//*****************************************************************************
+static const float g_pfExponents[] =
+{
+    1.0e+01,
+    1.0e+02,
+    1.0e+04,
+    1.0e+08,
+    1.0e+16,
+    1.0e+32,
+};
+
+//*****************************************************************************
+//
+//! Converts a string into its floating-point equivalent.
 //!
-//! \param pcStr is a pointer to the string whose length is to be found.
+//! \param nptr is a pointer to the string containing the floating-point
+//! value.
+//! \param endptr is a pointer that will be set to the first character past
+//! the floating-point value in the string.
+//!
+//! This function is very similar to the C library <tt>strtof()</tt> function.
+//! It scans a string for the first token (that is, non-white space) and
+//! converts the value at that location in the string into a floating-point
+//! value.
+//!
+//! \return Returns the result of the conversion.
+//
+//*****************************************************************************
+float
+ustrtof(const char *nptr, const char **endptr)
+{
+    unsigned long ulNeg, ulExp, ulExpNeg, ulValid, ulIdx;
+    float fRet, fDigit, fExp;
+    const char *pcPtr;
+
+    //
+    // Check the arguments.
+    //
+    ASSERT(nptr);
+
+    //
+    // Initially, the result is zero.
+    //
+    fRet = 0;
+    ulNeg = 0;
+    ulValid = 0;
+
+    //
+    // Skip past any leading white space.
+    //
+    pcPtr = nptr;
+    while((*pcPtr == ' ') || (*pcPtr == '\t'))
+    {
+        pcPtr++;
+    }
+
+    //
+    // Take a leading + or - from the value.
+    //
+    if(*pcPtr == '-')
+    {
+        ulNeg = 1;
+        pcPtr++;
+    }
+    else if(*pcPtr == '+')
+    {
+        pcPtr++;
+    }
+
+    //
+    // Loop while there are valid digits to consume.
+    //
+    while((*pcPtr >= '0') && (*pcPtr <= '9'))
+    {
+        //
+        // Add this digit to the converted value.
+        //
+        fRet *= 10;
+        fRet += *pcPtr++ - '0';
+
+        //
+        // Since a digit has been added, this is now a valid result.
+        //
+        ulValid = 1;
+    }
+
+    //
+    // See if the next character is a period and the character after that is a
+    // digit, indicating the start of the fractional portion of the value.
+    //
+    if((*pcPtr == '.') && (pcPtr[1] >= '0') && (pcPtr[1] <= '9'))
+    {
+        //
+        // Skip the period.
+        //
+        pcPtr++;
+
+        //
+        // Loop while there are valid fractional digits to consume.
+        //
+        fDigit = 0.1;
+        while((*pcPtr >= '0') && (*pcPtr <= '9'))
+        {
+            //
+            // Add this digit to the converted value.
+            //
+            fRet += (*pcPtr++ - '0') * fDigit;
+            fDigit /= (float)10.0;
+
+            //
+            // Since a digit has been added, this is now a valid result.
+            //
+            ulValid = 1;
+        }
+    }
+
+    //
+    // See if the next character is an "e" and a valid number has been
+    // converted, indicating the start of the exponent.
+    //
+    if(((pcPtr[0] == 'e') || (pcPtr[0] == 'E')) && (ulValid == 1) &&
+       (((pcPtr[1] >= '0') && (pcPtr[1] <= '9')) ||
+        (((pcPtr[1] == '+') || (pcPtr[1] == '-')) &&
+         (pcPtr[2] >= '0') && (pcPtr[2] <= '9'))))
+    {
+        //
+        // Skip the "e".
+        //
+        pcPtr++;
+
+        //
+        // Take a leading + or - from the exponenet.
+        //
+        ulExpNeg = 0;
+        if(*pcPtr == '-')
+        {
+            ulExpNeg = 1;
+            pcPtr++;
+        }
+        else if(*pcPtr == '+')
+        {
+            pcPtr++;
+        }
+
+        //
+        // Loop while there are valid digits in the exponent.
+        //
+        ulExp = 0;
+        while((*pcPtr >= '0') && (*pcPtr <= '9'))
+        {
+            //
+            // Add this digit to the converted value.
+            //
+            ulExp *= 10;
+            ulExp += *pcPtr++ - '0';
+        }
+
+        //
+        // Raise ten to the power of the exponent.  Do this via binary
+        // decomposition; for each binary bit set in the exponent, multiply the
+        // floating-point representation by ten raised to that binary value
+        // (extracted from the table above).
+        //
+        fExp = 1;
+        for(ulIdx = 0; ulIdx < 7; ulIdx++)
+        {
+            if(ulExp & (1 << ulIdx))
+            {
+                fExp *= g_pfExponents[ulIdx];
+            }
+        }
+
+        //
+        // If the exponent is negative, then the exponent needs to be inverted.
+        //
+        if(ulExpNeg == 1)
+        {
+            fExp = 1 / fExp;
+        }
+
+        //
+        // Multiply the result by the computed exponent value.
+        //
+        fRet *= fExp;
+    }
+
+    //
+    // Set the return string pointer to the first character not consumed.
+    //
+    if(endptr)
+    {
+        *endptr = ulValid ? pcPtr : nptr;
+    }
+
+    //
+    // Return the converted value.
+    //
+    return(ulNeg ? (0 - fRet) : fRet);
+}
+
+//*****************************************************************************
+//
+//! Returns the length of a null-terminated string.
+//!
+//! \param s is a pointer to the string whose length is to be found.
 //!
 //! This function is very similar to the C library <tt>strlen()</tt> function.
 //! It determines the length of the null-terminated string passed and returns
@@ -1286,82 +1494,85 @@ ustrtoul(const char *pcStr, const char **ppcStrRet, int iBase)
 //! This implementation assumes that single byte character strings are passed
 //! and will return incorrect values if passed some UTF-8 strings.
 //!
-//! \return Returns the length of the string pointed to by \e pcStr.
+//! \return Returns the length of the string pointed to by \e s.
 //
 //*****************************************************************************
-int
-ustrlen(const char * pcStr)
+size_t
+ustrlen(const char *s)
 {
-    int iLen;
+    size_t len;
 
-    ASSERT(pcStr);
+    //
+    // Check the arguments.
+    //
+    ASSERT(s);
 
     //
     // Initialize the length.
     //
-    iLen = 0;
+    len = 0;
 
     //
     // Step throug the string looking for a zero character (marking its end).
     //
-    while(pcStr[iLen])
+    while(s[len])
     {
         //
         // Zero not found so move on to the next character.
         //
-        iLen++;
+        len++;
     }
 
-    return(iLen);
+    return(len);
 }
 
 //*****************************************************************************
 //
 //! Finds a substring within a string.
 //!
-//! \param pcHaystack is a pointer to the string that will be searched.
-//! \param pcNeedle is a pointer to the substring that is to be found within
-//! \e pcHaystack.
+//! \param s1 is a pointer to the string that will be searched.
+//! \param s2 is a pointer to the substring that is to be found within
+//! \e s1.
 //!
 //! This function is very similar to the C library <tt>strstr()</tt> function.
 //! It scans a string for the first instance of a given substring and returns
 //! a pointer to that substring.  If the substring cannot be found, a NULL
 //! pointer is returned.
 //!
-//! \return Returns a pointer to the first occurrence of \e pcNeedle within
-//! \e pcHaystack or NULL if no match is found.
+//! \return Returns a pointer to the first occurrence of \e s2 within
+//! \e s1 or NULL if no match is found.
 //
 //*****************************************************************************
 char *
-ustrstr(const char *pcHaystack, const char *pcNeedle)
+ustrstr(const char *s1, const char *s2)
 {
-    unsigned long ulLength;
+    size_t n;
 
     //
     // Get the length of the string to be found.
     //
-    ulLength = ustrlen(pcNeedle);
+    n = ustrlen(s2);
 
     //
     // Loop while we have not reached the end of the string.
     //
-    while(*pcHaystack)
+    while(*s1)
     {
         //
         // Check to see if the substring appears at this position.
         //
-        if(ustrncmp(pcNeedle, pcHaystack, ulLength) == 0)
+        if(ustrncmp(s2, s1, n) == 0)
         {
             //
             // It does so return the pointer.
             //
-            return((char *)pcHaystack);
+            return((char *)s1);
         }
 
         //
         // Move to the next position in the string being searched.
         //
-        pcHaystack++;
+        s1++;
     }
 
     //
@@ -1375,32 +1586,35 @@ ustrstr(const char *pcHaystack, const char *pcNeedle)
 //
 //! Compares two strings without regard to case.
 //!
-//! \param pcStr1 points to the first string to be compared.
-//! \param pcStr2 points to the second string to be compared.
-//! \param iCount is the maximum number of characters to compare.
+//! \param s1 points to the first string to be compared.
+//! \param s2 points to the second string to be compared.
+//! \param n is the maximum number of characters to compare.
 //!
-//! This function is very similar to the C library <tt>strnicmp()</tt> function.
-//! It compares at most \e iCount characters of two strings without regard to
-//! case.  The comparison ends if a terminating NULL character is found in
-//! either string before \e iCount characters are compared.  In this case, the
-//! shorter string is deemed the lesser.
+//! This function is very similar to the C library <tt>strncasecmp()</tt>
+//! function.  It compares at most \e n characters of two strings without
+//! regard to case.  The comparison ends if a terminating NULL character is
+//! found in either string before \e n characters are compared.  In this case,
+//! the shorter string is deemed the lesser.
 //!
-//! \return Returns 0 if the two strings are equal, -1 if \e pcStr1 is less
-//! than \e pcStr2 and 1 if \e pcStr1 is greater than \e pcStr2.
+//! \return Returns 0 if the two strings are equal, -1 if \e s1 is less
+//! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
 int
-ustrnicmp(const char *pcStr1, const char *pcStr2, int iCount)
+ustrncasecmp(const char *s1, const char *s2, size_t n)
 {
-    char cL1, cL2;
+    char c1, c2;
 
-    while(iCount)
+    //
+    // Loop while there are more characters to compare.
+    //
+    while(n)
     {
         //
         // If we reached a NULL in both strings, they must be equal so
         // we end the comparison and return 0
         //
-        if(!*pcStr1 && !*pcStr2)
+        if(!*s1 && !*s2)
         {
             return(0);
         }
@@ -1408,19 +1622,18 @@ ustrnicmp(const char *pcStr1, const char *pcStr2, int iCount)
         //
         // Lower case the characters at the current position before we compare.
         //
-        cL1 = (((*pcStr1 >= 'A') && (*pcStr1 <= 'Z')) ?
-                            (*pcStr1 + ('a' - 'A')) : *pcStr1);
-        cL2 = (((*pcStr2 >= 'A') && (*pcStr2 <= 'Z')) ?
-                            (*pcStr2  + ('a' - 'A')) : *pcStr2);
+        c1 = (((*s1 >= 'A') && (*s1 <= 'Z')) ? (*s1 + ('a' - 'A')) : *s1);
+        c2 = (((*s2 >= 'A') && (*s2 <= 'Z')) ? (*s2 + ('a' - 'A')) : *s2);
+
         //
         // Compare the two characters and, if different, return the relevant
         // return code.
         //
-        if(cL2 < cL1)
+        if(c2 < c1)
         {
             return(1);
         }
-        if(cL1 < cL2)
+        if(c1 < c2)
         {
             return(-1);
         }
@@ -1428,13 +1641,13 @@ ustrnicmp(const char *pcStr1, const char *pcStr2, int iCount)
         //
         // Move on to the next character.
         //
-        pcStr1++;
-        pcStr2++;
-        iCount--;
+        s1++;
+        s2++;
+        n--;
     }
 
     //
-    // If we fall out, the strings must be equal for at least the first iCount
+    // If we fall out, the strings must be equal for at least the first n
     // characters so return 0 to indicate this.
     //
     return(0);
@@ -1444,55 +1657,58 @@ ustrnicmp(const char *pcStr1, const char *pcStr2, int iCount)
 //
 //! Compares two strings without regard to case.
 //!
-//! \param pcStr1 points to the first string to be compared.
-//! \param pcStr2 points to the second string to be compared.
+//! \param s1 points to the first string to be compared.
+//! \param s2 points to the second string to be compared.
 //!
 //! This function is very similar to the C library <tt>strcasecmp()</tt>
 //! function.  It compares two strings without regard to case.  The comparison
 //! ends if a terminating NULL character is found in either string.  In this
-//! case, the shorter string is deemed the lesser.
+//! case, the int16_ter string is deemed the lesser.
 //!
-//! \return Returns 0 if the two strings are equal, -1 if \e pcStr1 is less
-//! than \e pcStr2 and 1 if \e pcStr1 is greater than \e pcStr2.
+//! \return Returns 0 if the two strings are equal, -1 if \e s1 is less
+//! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
 int
-ustrcasecmp(const char *pcStr1, const char *pcStr2)
+ustrcasecmp(const char *s1, const char *s2)
 {
     //
-    // Just let ustrnicmp() handle this.
+    // Just let ustrncasecmp() handle this.
     //
-    return(ustrnicmp(pcStr1, pcStr2, -1));
+    return(ustrncasecmp(s1, s2, (size_t)-1));
 }
 
 //*****************************************************************************
 //
 //! Compares two strings.
 //!
-//! \param pcStr1 points to the first string to be compared.
-//! \param pcStr2 points to the second string to be compared.
-//! \param iCount is the maximum number of characters to compare.
+//! \param s1 points to the first string to be compared.
+//! \param s2 points to the second string to be compared.
+//! \param n is the maximum number of characters to compare.
 //!
 //! This function is very similar to the C library <tt>strncmp()</tt> function.
-//! It compares at most \e iCount characters of two strings taking case into
+//! It compares at most \e n characters of two strings taking case into
 //! account.  The comparison ends if a terminating NULL character is found in
-//! either string before \e iCount characters are compared.  In this case, the
-//! shorter string is deemed the lesser.
+//! either string before \e n characters are compared.  In this case, the
+//! int16_ter string is deemed the lesser.
 //!
-//! \return Returns 0 if the two strings are equal, -1 if \e pcStr1 is less
-//! than \e pcStr2 and 1 if \e pcStr1 is greater than \e pcStr2.
+//! \return Returns 0 if the two strings are equal, -1 if \e s1 is less
+//! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
 int
-ustrncmp(const char *pcStr1, const char *pcStr2, int iCount)
+ustrncmp(const char *s1, const char *s2, size_t n)
 {
-    while(iCount)
+    //
+    // Loop while there are more characters.
+    //
+    while(n)
     {
         //
-        // If we reached a NULL in both strings, they must be equal so
-        // we end the comparison and return 0
+        // If we reached a NULL in both strings, they must be equal so we end
+        // the comparison and return 0
         //
-        if(!*pcStr1 && !*pcStr2)
+        if(!*s1 && !*s2)
         {
             return(0);
         }
@@ -1501,11 +1717,11 @@ ustrncmp(const char *pcStr1, const char *pcStr2, int iCount)
         // Compare the two characters and, if different, return the relevant
         // return code.
         //
-        if(*pcStr2 < *pcStr1)
+        if(*s2 < *s1)
         {
             return(1);
         }
-        if(*pcStr1 < *pcStr2)
+        if(*s1 < *s2)
         {
             return(-1);
         }
@@ -1513,42 +1729,41 @@ ustrncmp(const char *pcStr1, const char *pcStr2, int iCount)
         //
         // Move on to the next character.
         //
-        pcStr1++;
-        pcStr2++;
-        iCount--;
+        s1++;
+        s2++;
+        n--;
     }
 
     //
-    // If we fall out, the strings must be equal for at least the first iCount
+    // If we fall out, the strings must be equal for at least the first n
     // characters so return 0 to indicate this.
     //
     return(0);
-
 }
 
 //*****************************************************************************
 //
 //! Compares two strings.
 //!
-//! \param pcStr1 points to the first string to be compared.
-//! \param pcStr2 points to the second string to be compared.
+//! \param s1 points to the first string to be compared.
+//! \param s2 points to the second string to be compared.
 //!
 //! This function is very similar to the C library <tt>strcmp()</tt>
 //! function.  It compares two strings, taking case into account.  The
 //! comparison ends if a terminating NULL character is found in either string.
-//! In this case, the shorter string is deemed the lesser.
+//! In this case, the int16_ter string is deemed the lesser.
 //!
-//! \return Returns 0 if the two strings are equal, -1 if \e pcStr1 is less
-//! than \e pcStr2 and 1 if \e pcStr1 is greater than \e pcStr2.
+//! \return Returns 0 if the two strings are equal, -1 if \e s1 is less
+//! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
 int
-ustrcmp(const char *pcStr1, const char *pcStr2)
+ustrcmp(const char *s1, const char *s2)
 {
     //
     // Pass this on to ustrncmp.
     //
-    return(ustrncmp(pcStr1, pcStr2, -1));
+    return(ustrncmp(s1, s2, (size_t)-1));
 }
 
 //*****************************************************************************
@@ -1556,13 +1771,14 @@ ustrcmp(const char *pcStr1, const char *pcStr2)
 // Random Number Generator Seed Value
 //
 //*****************************************************************************
-static unsigned long g_ulRandomSeed = 1;
+static unsigned int g_iRandomSeed = 1;
 
 //*****************************************************************************
 //
 //! Set the random number generator seed.
 //!
-//! \param ulSeed is the new seed value to use for the random number generator.
+//! \param seed is the new seed value to use for the random number
+//! generator.
 //!
 //! This function is very similar to the C library <tt>srand()</tt> function.
 //! It will set the seed value used in the <tt>urand()</tt> function.
@@ -1571,9 +1787,9 @@ static unsigned long g_ulRandomSeed = 1;
 //
 //*****************************************************************************
 void
-usrand(unsigned long ulSeed)
+usrand(unsigned int seed)
 {
-    g_ulRandomSeed = ulSeed;
+    g_iRandomSeed = seed;
 }
 
 //*****************************************************************************
@@ -1594,12 +1810,12 @@ urand(void)
     // number generator.  This new random number becomes the seed for the next
     // random number.
     //
-    g_ulRandomSeed = (g_ulRandomSeed * 1664525) + 1013904223;
+    g_iRandomSeed = (g_iRandomSeed * 1664525) + 1013904223;
 
     //
     // Return the new random number.
     //
-    return((int)g_ulRandomSeed);
+    return((int)g_iRandomSeed);
 }
 
 //*****************************************************************************

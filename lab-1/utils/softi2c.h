@@ -2,7 +2,7 @@
 //
 // softi2c.h - Defines and macros for the SoftI2C.
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -63,58 +63,58 @@ typedef struct
     //! can be set via a direct structure access or using the SoftI2CSCLGPIOSet
     //! function.
     //
-    unsigned long ulSCLGPIO;
+    uint32_t ui32SCLGPIO;
 
     //
     //! The address of the GPIO pin to be used for the SDA signal.  This member
     //! can be set via a direct structure access or using the SoftI2CSDAGPIOSet
     //! function.
     ///
-    unsigned long ulSDAGPIO;
+    uint32_t ui32SDAGPIO;
 
     //
     //! The flags that control the operation of the SoftI2C module.  This
     //! member should not be accessed or modified by the application.
     //
-    unsigned char ucFlags;
+    uint8_t ui8Flags;
 
     //
     //! The slave address that is currently being accessed.  This member should
     //! not be accessed or modified by the application.
     //
-    unsigned char ucSlaveAddr;
+    uint8_t ui8SlaveAddr;
 
     //
     //! The data that is currently being transmitted or received.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned char ucData;
+    uint8_t ui8Data;
 
     //
     //! The current state of the SoftI2C state machine.  This member should not
     //! be accessed or modified by the application.
     //
-    unsigned char ucState;
+    uint8_t ui8State;
 
     //
     //! The number of bits that have been transmitted and received in the
     //! current frame.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned char ucCurrentBit;
+    uint8_t ui8CurrentBit;
 
     //
     //! The set of virtual interrupts that should be sent to the callback
     //! function.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned char ucIntMask;
+    uint8_t ui8IntMask;
 
     //
     //! The set of virtual interrupts that are currently asserted.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned char ucIntStatus;
+    uint8_t ui8IntStatus;
 }
 tSoftI2C;
 
@@ -164,24 +164,24 @@ tSoftI2C;
 // Prototypes for the APIs.
 //
 //*****************************************************************************
-extern tBoolean SoftI2CBusy(tSoftI2C *pI2C);
-extern void SoftI2CCallbackSet(tSoftI2C *pI2C, void (*pfnCallback)(void));
-extern void SoftI2CControl(tSoftI2C *pI2C, unsigned long ulCmd);
-extern unsigned long SoftI2CDataGet(tSoftI2C *pI2C);
-extern void SoftI2CDataPut(tSoftI2C *pI2C, unsigned char ucData);
-extern unsigned long SoftI2CErr(tSoftI2C *pI2C);
-extern void SoftI2CInit(tSoftI2C *pI2C);
-extern void SoftI2CIntClear(tSoftI2C *pI2C);
-extern void SoftI2CIntDisable(tSoftI2C *pI2C);
-extern void SoftI2CIntEnable(tSoftI2C *pI2C);
-extern tBoolean SoftI2CIntStatus(tSoftI2C *pI2C, tBoolean bMasked);
-extern void SoftI2CSCLGPIOSet(tSoftI2C *pI2C, unsigned long ulBase,
-                              unsigned char ucPin);
-extern void SoftI2CSDAGPIOSet(tSoftI2C *pI2C, unsigned long ulBase,
-                              unsigned char ucPin);
-extern void SoftI2CSlaveAddrSet(tSoftI2C *pI2C, unsigned char ucSlaveAddr,
-                                tBoolean bReceive);
-extern void SoftI2CTimerTick(tSoftI2C *pI2C);
+extern bool SoftI2CBusy(tSoftI2C *psI2C);
+extern void SoftI2CCallbackSet(tSoftI2C *psI2C, void (*pfnCallback)(void));
+extern void SoftI2CControl(tSoftI2C *psI2C, uint32_t ui32Cmd);
+extern uint32_t SoftI2CDataGet(tSoftI2C *psI2C);
+extern void SoftI2CDataPut(tSoftI2C *psI2C, uint8_t ui8Data);
+extern uint32_t SoftI2CErr(tSoftI2C *psI2C);
+extern void SoftI2CInit(tSoftI2C *psI2C);
+extern void SoftI2CIntClear(tSoftI2C *psI2C);
+extern void SoftI2CIntDisable(tSoftI2C *psI2C);
+extern void SoftI2CIntEnable(tSoftI2C *psI2C);
+extern bool SoftI2CIntStatus(tSoftI2C *psI2C, bool bMasked);
+extern void SoftI2CSCLGPIOSet(tSoftI2C *psI2C, uint32_t ui32Base,
+                              uint8_t ui8Pin);
+extern void SoftI2CSDAGPIOSet(tSoftI2C *psI2C, uint32_t ui32Base,
+                              uint8_t ui8Pin);
+extern void SoftI2CSlaveAddrSet(tSoftI2C *psI2C, uint8_t ui8SlaveAddr,
+                                bool bReceive);
+extern void SoftI2CTimerTick(tSoftI2C *psI2C);
 
 //*****************************************************************************
 //

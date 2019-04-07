@@ -1,8 +1,8 @@
-//****************************************************************************
+//*****************************************************************************
 //
 // scheduler.c - A simple task scheduler
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,9 +18,12 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
-//****************************************************************************
+//*****************************************************************************
+
+#include <stdbool.h>
+#include <stdint.h>
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
 #include "driverlib/systick.h"
@@ -36,9 +39,9 @@
 //
 //*****************************************************************************
 
-static volatile unsigned long g_ulSchedulerTickCount;
+static volatile uint32_t g_ui32SchedulerTickCount;
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Handles the SysTick interrupt on behalf of the scheduler module.
 //!
@@ -47,19 +50,19 @@ static volatile unsigned long g_ulSchedulerTickCount;
 //!
 //! \return None.
 //
-//****************************************************************************
+//*****************************************************************************
 void
 SchedulerSysTickIntHandler(void)
 {
-    g_ulSchedulerTickCount++;
+    g_ui32SchedulerTickCount++;
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Initializes the task scheduler.
 //!
-//! \param ulTicksPerSecond sets the basic frequency of the SysTick interrupt
-//!   used by the scheduler to determine when to run the various task functions.
+//! \param ui32TicksPerSecond sets the basic frequency of the SysTick interrupt
+//! used by the scheduler to determine when to run the various task functions.
 //!
 //! This function must be called during application startup to configure the
 //! SysTick timer.  This is used by the scheduler module to determine when each
@@ -76,21 +79,21 @@ SchedulerSysTickIntHandler(void)
 //!
 //! \return None.
 //
-//****************************************************************************
+//*****************************************************************************
 void
-SchedulerInit(unsigned long ulTicksPerSecond)
+SchedulerInit(uint32_t ui32TicksPerSecond)
 {
-    ASSERT(ulTicksPerSecond);
+    ASSERT(ui32TicksPerSecond);
 
     //
     // Configure SysTick for a periodic interrupt.
     //
-    SysTickPeriodSet(SysCtlClockGet() / ulTicksPerSecond);
+    SysTickPeriodSet(SysCtlClockGet() / ui32TicksPerSecond);
     SysTickEnable();
     SysTickIntEnable();
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Instructs the scheduler to update its task table and make calls to
 //! functions needing called.
@@ -106,51 +109,52 @@ SchedulerInit(unsigned long ulTicksPerSecond)
 //!
 //! \return None.
 //
-//****************************************************************************
+//*****************************************************************************
 void
 SchedulerRun(void)
 {
-    unsigned long ulLoop;
-    tSchedulerTask *psTask;
+    uint32_t ui32Loop;
+    tSchedulerTask *pi16Task;
 
     //
     // Loop through each task in the task table.
     //
-    for(ulLoop = 0; ulLoop < g_ulSchedulerNumTasks; ulLoop++)
+    for(ui32Loop = 0; ui32Loop < g_ui32SchedulerNumTasks; ui32Loop++)
     {
         //
         // Get a pointer to the task information.
         //
-        psTask = &g_psSchedulerTable[ulLoop];
+        pi16Task = &g_psSchedulerTable[ui32Loop];
 
         //
         // Is this task active and, if so, is it time to call it's function?
         //
-        if(psTask->bActive && (SchedulerElapsedTicksGet(psTask->ulLastCall) >=
-           psTask->ulFrequencyTicks))
+        if(pi16Task->bActive &&
+           (SchedulerElapsedTicksGet(pi16Task->ui32LastCall) >=
+            pi16Task->ui32FrequencyTicks))
         {
             //
             // Remember the timestamp at which we make the function call.
             //
-            psTask->ulLastCall = g_ulSchedulerTickCount;
+            pi16Task->ui32LastCall = g_ui32SchedulerTickCount;
 
             //
             // Call the task function, passing the provided parameter.
             //
-            psTask->pfnFunction(psTask->pvParam);
+            pi16Task->pfnFunction(pi16Task->pvParam);
         }
     }
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Enables a task and allows the scheduler to call it periodically.
 //!
-//! \param ulIndex is the index of the task which is to be enabled in the
-//!        global \e g_psSchedulerTable array.
+//! \param ui32Index is the index of the task which is to be enabled in the
+//! global \e g_psSchedulerTable array.
 //! \param bRunNow is \b true if the task is to be run on the next call to
-//!        SchedulerRun() or \b false if one whole period is to elapse before
-//!        the task is run.
+//! SchedulerRun() or \b false if one whole period is to elapse before the task
+//! is run.
 //!
 //! This function marks one of the configured tasks as enabled and causes
 //! SchedulerRun() to call that task periodically.  The caller may choose to
@@ -160,19 +164,19 @@ SchedulerRun(void)
 //!
 //! \return None.
 //
-//****************************************************************************
+//*****************************************************************************
 void
-SchedulerTaskEnable(unsigned long ulIndex, tBoolean bRunNow)
+SchedulerTaskEnable(uint32_t ui32Index, bool bRunNow)
 {
     //
     // Is the task index passed valid?
     //
-    if(ulIndex < g_ulSchedulerNumTasks)
+    if(ui32Index < g_ui32SchedulerNumTasks)
     {
         //
         // Yes - mark the task as active.
         //
-        g_psSchedulerTable[ulIndex].bActive = true;
+        g_psSchedulerTable[ui32Index].bActive = true;
 
         //
         // Set the last call time to ensure that the function is called either
@@ -184,25 +188,27 @@ SchedulerTaskEnable(unsigned long ulIndex, tBoolean bRunNow)
             //
             // Cause the task to run on the next call to SchedulerRun().
             //
-            g_psSchedulerTable[ulIndex].ulLastCall = (g_ulSchedulerTickCount -
-                            g_psSchedulerTable[ulIndex].ulFrequencyTicks);
+            g_psSchedulerTable[ui32Index].ui32LastCall =
+                (g_ui32SchedulerTickCount -
+                 g_psSchedulerTable[ui32Index].ui32FrequencyTicks);
         }
         else
         {
             //
             // Cause the task to run after one full time period.
             //
-            g_psSchedulerTable[ulIndex].ulLastCall = g_ulSchedulerTickCount;
+            g_psSchedulerTable[ui32Index].ui32LastCall =
+                g_ui32SchedulerTickCount;
         }
     }
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Disables a task and prevents the scheduler from calling it.
 //!
-//! \param ulIndex is the index of the task which is to be disabled in the
-//!        global \e g_psSchedulerTable array.
+//! \param ui32Index is the index of the task which is to be disabled in the
+//! global \e g_psSchedulerTable array.
 //!
 //! This function marks one of the configured tasks as inactive and prevents
 //! SchedulerRun() from calling it.  The task may be reenabled by calling
@@ -210,23 +216,23 @@ SchedulerTaskEnable(unsigned long ulIndex, tBoolean bRunNow)
 //!
 //! \return None.
 //
-//****************************************************************************
+//*****************************************************************************
 void
-SchedulerTaskDisable(unsigned long ulIndex)
+SchedulerTaskDisable(uint32_t ui32Index)
 {
     //
     // Is the task index passed valid?
     //
-    if(ulIndex < g_ulSchedulerNumTasks)
+    if(ui32Index < g_ui32SchedulerNumTasks)
     {
         //
         // Yes - mark the task as inactive.
         //
-        g_psSchedulerTable[ulIndex].bActive = false;
+        g_psSchedulerTable[ui32Index].bActive = false;
     }
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Returns the current system time in ticks since power on.
 //!
@@ -236,48 +242,48 @@ SchedulerTaskDisable(unsigned long ulIndex)
 //!
 //! \return Tick count since last boot.
 //
-//****************************************************************************
-unsigned long
+//*****************************************************************************
+uint32_t
 SchedulerTickCountGet(void)
 {
-    return(g_ulSchedulerTickCount);
+    return(g_ui32SchedulerTickCount);
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Returns the number of ticks elapsed since the provided tick count.
 //!
-//! \param ulTickCount is the tick count from which to determine the elapsed
+//! \param ui32TickCount is the tick count from which to determine the elapsed
 //! time.
 //!
 //! This function may be called by a client to determine how much time has
-//! passed since a particular tick count provided in the \e ulTickCount
+//! passed since a particular tick count provided in the \e ui32TickCount
 //! parameter.  This function takes into account wrapping of the global tick
 //! counter and assumes that the provided tick count always represents a time
 //! in the past.  The returned value will, of course, be wrong if the tick
-//! counter has wrapped more than once since the passed \e ulTickCount.  As a
+//! counter has wrapped more than once since the passed \e ui32TickCount.  As a
 //! result, please do not use this function if you are dealing with timeouts
 //! of 497 days or longer (assuming you use a 10mS tick period).
 //!
 //! \return The number of ticks elapsed since the provided tick count.
 //
-//****************************************************************************
-unsigned long
-SchedulerElapsedTicksGet(unsigned long ulTickCount)
+//*****************************************************************************
+uint32_t
+SchedulerElapsedTicksGet(uint32_t ui32TickCount)
 {
     //
     // Determine the calculation based upon whether the global tick count has
-    // wrapped since the passed ulTickCount.
+    // wrapped since the passed ui32TickCount.
     //
-    return(SchedulerElapsedTicksCalc(ulTickCount, g_ulSchedulerTickCount));
+    return(SchedulerElapsedTicksCalc(ui32TickCount, g_ui32SchedulerTickCount));
 }
 
-//****************************************************************************
+//*****************************************************************************
 //
 //! Returns the number of ticks elapsed between two times.
 //!
-//! \param ulTickStart is the system tick count for the start of the period.
-//! \param ulTickEnd is the system tick count for the end of the period.
+//! \param ui32TickStart is the system tick count for the start of the period.
+//! \param ui32TickEnd is the system tick count for the end of the period.
 //!
 //! This function may be called by a client to determine the number of ticks
 //! which have elapsed between provided starting and ending tick counts.  The
@@ -288,12 +294,12 @@ SchedulerElapsedTicksGet(unsigned long ulTickCount)
 //! \return The number of ticks elapsed between the provided start and end
 //! counts.
 //
-//****************************************************************************
-unsigned long
-SchedulerElapsedTicksCalc(unsigned long ulTickStart, unsigned long ulTickEnd)
+//*****************************************************************************
+uint32_t
+SchedulerElapsedTicksCalc(uint32_t ui32TickStart, uint32_t ui32TickEnd)
 {
-    return((ulTickEnd > ulTickStart) ? (ulTickEnd - ulTickStart) :
-           ((0xFFFFFFFF - ulTickStart) + ulTickEnd + 1));
+    return((ui32TickEnd > ui32TickStart) ? (ui32TickEnd - ui32TickStart) :
+           ((0xFFFFFFFF - ui32TickStart) + ui32TickEnd + 1));
 }
 
 //*****************************************************************************

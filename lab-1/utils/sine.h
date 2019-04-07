@@ -2,7 +2,7 @@
 //
 // sine.h - Prototypes for the fixed point sine trigonometric function.
 //
-// Copyright (c) 2006-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2006-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -47,7 +47,7 @@ extern "C"
 //
 //! Computes an approximation of the cosine of the input angle.
 //!
-//! \param ulAngle is an angle expressed as a 0.32 fixed-point value that is
+//! \param ui32Angle is an angle expressed as a 0.32 fixed-point value that is
 //! the percentage of the way around a circle.
 //!
 //! This function computes the cosine for the given input angle.  The angle is
@@ -57,7 +57,7 @@ extern "C"
 //! \return Returns the cosine of the angle, in 16.16 fixed point format.
 //
 //*****************************************************************************
-#define cosine(ulAngle)         sine((ulAngle + 0x40000000))
+#define cosine(ui32Angle)         sine((ui32Angle) + 0x40000000)
 
 //*****************************************************************************
 //
@@ -71,7 +71,7 @@ extern "C"
 // Prototype for the fixed point sine function.
 //
 //*****************************************************************************
-extern long sine(unsigned long ulAngle);
+extern int32_t sine(uint32_t ui32Angle);
 
 //*****************************************************************************
 //

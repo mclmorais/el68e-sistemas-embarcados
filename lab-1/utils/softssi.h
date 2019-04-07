@@ -2,7 +2,7 @@
 //
 // softssi.h - Defines and macros for the SoftSSI.
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -64,100 +64,100 @@ typedef struct
     //! set via a direct structure access or using the SoftSSIFssGPIOSet
     //! function.
     ///
-    unsigned long ulFssGPIO;
+    uint32_t ui32FssGPIO;
 
     //
     //! The address of the GPIO pin to be used for the Clk signal.  This member
     //! can be set via a direct structure access or using the SoftSSIClkGPIOSet
     //! function.
     //
-    unsigned long ulClkGPIO;
+    uint32_t ui32ClkGPIO;
 
     //
     //! The address of the GPIO pin to be used for the Tx signal.  This member
     //! can be set via a direct structure access or using the SoftSSITxGPIOSet
     //! function.
     //
-    unsigned long ulTxGPIO;
+    uint32_t ui32TxGPIO;
 
     //
     //! The address of the GPIO pin to be used for the Rx signal.  If this
     //! member is zero, the Rx signal is not read.  This member can be set via
     //! a direct structure access or using the SoftSSIRxGPIOSet function.
     //
-    unsigned long ulRxGPIO;
+    uint32_t ui32RxGPIO;
 
     //
     //! The address of the data buffer used for the transmit FIFO.  This member
     //! can be set via a direct structure access or using the
     //! SoftSSITxBufferSet function.
     //
-    unsigned short *pusTxBuffer;
+    uint16_t *pui16TxBuffer;
 
     //
     //! The address of the data buffer used for the receive FIFO.  This member
     //! can be set via a direct structure access or using the
     //! SoftSSIRxBufferSet function.
     //
-    unsigned short *pusRxBuffer;
+    uint16_t *pui16RxBuffer;
 
     //
     //! The length of the transmit FIFO.  This member can be set via a direct
     //! structure access or using the SoftSSITxBufferSet function.
     //
-    unsigned short usTxBufferLen;
+    uint16_t ui16TxBufferLen;
 
     //
     //! The index into the transmit FIFO of the next word to be transmitted.
     //! This member should be initialized to zero, but should not be accessed
     //! or modified by the application.
     //
-    unsigned short usTxBufferRead;
+    uint16_t ui16TxBufferRead;
 
     //
     //! The index into the transmit FIFO of the next location to store data
     //! into the FIFO.  This member should be initialized to zero, but should
     //! not be accessed or modified by the application.
     //
-    unsigned short usTxBufferWrite;
+    uint16_t ui16TxBufferWrite;
 
     //
     //! The length of the receive FIFO.  This member can be set via a direct
     //! structure access or using the SoftSSIRxBufferSet function.
     //
-    unsigned short usRxBufferLen;
+    uint16_t ui16RxBufferLen;
 
     //
     //! The index into the receive FIFO of the next word to be read from the
     //! FIFO.  This member should be initialized to zero, but should not be
     //! accessed or modified by the application.
     //
-    unsigned short usRxBufferRead;
+    uint16_t ui16RxBufferRead;
 
     //
     //! The index into the receive FIFO of the location to store the next word
     //! received.  This member should be initialized to zero, but should not be
     //! accessed or modified by the application.
     //
-    unsigned short usRxBufferWrite;
+    uint16_t ui16RxBufferWrite;
 
     //
     //! The word that is currently being transmitted.  This member should not
     //! be accessed or modified by the application.
     //
-    unsigned short usTxData;
+    uint16_t ui16TxData;
 
     //
     //! The word that is currently being received.  This member should not be
     //! accessed or modified by the application.
     //
-    unsigned short usRxData;
+    uint16_t ui16RxData;
 
     //
     //! The flags that control the operation of the SoftSSI module.  This
     //! member should not be accessed or modified by the application.
     //
-    unsigned char ucFlags;
+    uint8_t ui8Flags;
 
     //
     //! The number of data bits in each SoftSSI frame, which also specifies the
@@ -165,33 +165,33 @@ typedef struct
     //! can be set via a direct structure access or using the SoftSSIConfigSet
     //! function.
     //
-    unsigned char ucBits;
+    uint8_t ui8Bits;
 
     //
     //! The current state of the SoftSSI state machine.  This member should not
     //! be accessed or modified by the application.
     //
-    unsigned char ucState;
+    uint8_t ui8State;
 
     //
     //! The number of bits that have been transmitted and received in the
     //! current frame.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned char ucCurrentBit;
+    uint8_t ui8CurrentBit;
 
     //
     //! The set of virtual interrupts that should be sent to the callback
     //! function.  This member should not be accessed or modified by the
     //! application.
     //
-    unsigned char ucIntMask;
+    uint8_t ui8IntMask;
 
     //
     //! The set of virtual interrupts that are currently asserted.  This member
     //! should not be accessed or modified by the application.
     //
-    unsigned char ucIntStatus;
+    uint8_t ui8IntStatus;
 
     //
     //! The number of tick counts that the SoftSSI module has been idle with
@@ -199,7 +199,7 @@ typedef struct
     //! timeout interrupt.  This member should not be accessed or modified by
     //! the application.
     //
-    unsigned char ucIdleCount;
+    uint8_t ui8IdleCount;
 }
 tSoftSSI;
 
@@ -213,7 +213,7 @@ tSoftSSI;
 //*****************************************************************************
 //
 // Values that can be passed to SoftSSIIntEnable, SoftSSIIntDisable, and
-// SoftSSIIntClear as the ulIntFlags parameter, and returned by
+// SoftSSIIntClear as the ui32IntFlags parameter, and returned by
 // SoftSSIIntStatus.
 //
 //*****************************************************************************
@@ -238,35 +238,35 @@ tSoftSSI;
 // Prototypes for the APIs.
 //
 //*****************************************************************************
-extern tBoolean SoftSSIBusy(tSoftSSI *pSSI);
-extern void SoftSSICallbackSet(tSoftSSI *pSSI, void (*pfnCallback)(void));
-extern void SoftSSIClkGPIOSet(tSoftSSI *pSSI, unsigned long ulBase,
-                              unsigned char ucPin);
-extern void SoftSSIConfigSet(tSoftSSI *pSSI, unsigned char ucProtocol,
-                             unsigned char ucBits);
-extern tBoolean SoftSSIDataAvail(tSoftSSI *pSSI);
-extern void SoftSSIDataGet(tSoftSSI *pSSI, unsigned long *pulData);
-extern long SoftSSIDataGetNonBlocking(tSoftSSI *pSSI, unsigned long *pulData);
-extern void SoftSSIDataPut(tSoftSSI *pSSI, unsigned long ulData);
-extern long SoftSSIDataPutNonBlocking(tSoftSSI *pSSI, unsigned long ulData);
-extern void SoftSSIDisable(tSoftSSI *pSSI);
-extern void SoftSSIEnable(tSoftSSI *pSSI);
-extern void SoftSSIFssGPIOSet(tSoftSSI *pSSI, unsigned long ulBase,
-                              unsigned char ucPin);
-extern void SoftSSIIntClear(tSoftSSI *pSSI, unsigned long ulIntFlags);
-extern void SoftSSIIntDisable(tSoftSSI *pSSI, unsigned long ulIntFlags);
-extern void SoftSSIIntEnable(tSoftSSI *pSSI, unsigned long ulIntFlags);
-extern unsigned long SoftSSIIntStatus(tSoftSSI *pSSI, tBoolean bMasked);
-extern void SoftSSIRxBufferSet(tSoftSSI *pSSI, unsigned short *pusRxBuffer,
-                               unsigned short usLen);
-extern void SoftSSIRxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase,
-                             unsigned char ucPin);
-extern tBoolean SoftSSISpaceAvail(tSoftSSI *pSSI);
-extern void SoftSSITimerTick(tSoftSSI *pSSI);
-extern void SoftSSITxBufferSet(tSoftSSI *pSSI, unsigned short *pusTxBuffer,
-                               unsigned short usLen);
-extern void SoftSSITxGPIOSet(tSoftSSI *pSSI, unsigned long ulBase,
-                             unsigned char ucPin);
+extern bool SoftSSIBusy(tSoftSSI *psSSI);
+extern void SoftSSICallbackSet(tSoftSSI *psSSI, void (*pfnCallback)(void));
+extern void SoftSSIClkGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base,
+                              uint8_t ui8Pin);
+extern void SoftSSIConfigSet(tSoftSSI *psSSI, uint8_t ui8Protocol,
+                             uint8_t ui8Bits);
+extern bool SoftSSIDataAvail(tSoftSSI *psSSI);
+extern void SoftSSIDataGet(tSoftSSI *psSSI, uint32_t *pui32Data);
+extern int32_t SoftSSIDataGetNonBlocking(tSoftSSI *psSSI, uint32_t *pui32Data);
+extern void SoftSSIDataPut(tSoftSSI *psSSI, uint32_t ui32Data);
+extern int32_t SoftSSIDataPutNonBlocking(tSoftSSI *psSSI, uint32_t ui32Data);
+extern void SoftSSIDisable(tSoftSSI *psSSI);
+extern void SoftSSIEnable(tSoftSSI *psSSI);
+extern void SoftSSIFssGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base,
+                              uint8_t ui8Pin);
+extern void SoftSSIIntClear(tSoftSSI *psSSI, uint32_t ui32IntFlags);
+extern void SoftSSIIntDisable(tSoftSSI *psSSI, uint32_t ui32IntFlags);
+extern void SoftSSIIntEnable(tSoftSSI *psSSI, uint32_t ui32IntFlags);
+extern uint32_t SoftSSIIntStatus(tSoftSSI *psSSI, bool bMasked);
+extern void SoftSSIRxBufferSet(tSoftSSI *psSSI, uint16_t *pui16RxBuffer,
+                               uint16_t ui16Len);
+extern void SoftSSIRxGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base,
+                             uint8_t ui8Pin);
+extern bool SoftSSISpaceAvail(tSoftSSI *psSSI);
+extern void SoftSSITimerTick(tSoftSSI *psSSI);
+extern void SoftSSITxBufferSet(tSoftSSI *psSSI, uint16_t *pui16TxBuffer,
+                               uint16_t ui16Len);
+extern void SoftSSITxGPIOSet(tSoftSSI *psSSI, uint32_t ui32Base,
+                             uint8_t ui8Pin);
 
 //*****************************************************************************
 //

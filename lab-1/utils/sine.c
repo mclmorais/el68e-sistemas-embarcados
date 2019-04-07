@@ -2,7 +2,7 @@
 //
 // sine.c - Fixed point sine trigonometric function.
 //
-// Copyright (c) 2006-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2006-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,10 +18,11 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
+#include <stdint.h>
 #include "utils/sine.h"
 
 //*****************************************************************************
@@ -38,7 +39,7 @@
 // in 0.16 fixed point notation.
 //
 //*****************************************************************************
-static const unsigned short g_pusFixedSineTable[] =
+static const uint16_t g_pui16FixedSineTable[] =
 {
     0x0000, 0x0324, 0x0648, 0x096C, 0x0C8F, 0x0FB2, 0x12D5, 0x15F6, 0x1917,
     0x1C37, 0x1F56, 0x2273, 0x2590, 0x28AA, 0x2BC4, 0x2EDB, 0x31F1, 0x3505,
@@ -61,7 +62,7 @@ static const unsigned short g_pusFixedSineTable[] =
 //
 //! Computes an approximation of the sine of the input angle.
 //!
-//! \param ulAngle is an angle expressed as a 0.32 fixed-point value that is
+//! \param ui32Angle is an angle expressed as a 0.32 fixed-point value that is
 //! the percentage of the way around a circle.
 //!
 //! This function computes the sine for the given input angle.  The angle is
@@ -71,49 +72,49 @@ static const unsigned short g_pusFixedSineTable[] =
 //! \return Returns the sine of the angle, in 16.16 fixed point format.
 //
 //*****************************************************************************
-long
-sine(unsigned long ulAngle)
+int32_t
+sine(uint32_t ui32Angle)
 {
-    unsigned long ulIdx;
+    uint32_t ui32Idx;
 
     //
     // Add 0.5 to the angle.  Since only the upper 9 bits are used to compute
     // the sine value, adding one to the tenth bit is 0.5 from the point of
     // view of the sine table.
     //
-    ulAngle += 0x00400000;
+    ui32Angle += 0x00400000;
 
     //
     // Get the index into the sine table from bits 30:23.
     //
-    ulIdx = (ulAngle >> 23) & 255;
+    ui32Idx = (ui32Angle >> 23) & 255;
 
     //
     // If bit 30 is set, the angle is between 90 and 180 or 270 and 360.  In
     // these cases, the sine value is decreasing from one instead of increasing
     // from zero.  The indexing into the table needs to be reversed.
     //
-    if(ulAngle & 0x40000000)
+    if(ui32Angle & 0x40000000)
     {
-        ulIdx = 256 - ulIdx;
+        ui32Idx = 256 - ui32Idx;
     }
 
     //
     // Get the value of the sine.
     //
-    ulIdx = g_pusFixedSineTable[ulIdx];
+    ui32Idx = g_pui16FixedSineTable[ui32Idx];
 
     //
     // If bit 31 is set, the angle is between 180 and 360.  In this case, the
     // sine value is negative; otherwise it is positive.
     //
-    if(ulAngle & 0x80000000)
+    if(ui32Angle & 0x80000000)
     {
-        return(0 - ulIdx);
+        return(0 - ui32Idx);
     }
     else
     {
-        return(ulIdx);
+        return(ui32Idx);
     }
 }
 

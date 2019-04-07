@@ -1,8 +1,8 @@
-//****************************************************************************
+//*****************************************************************************
 //
 // scheduler.h - Public header for the simple timed function scheduler module.
 //
-// Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2010-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,9 +18,9 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
-//****************************************************************************
+//*****************************************************************************
 #ifndef __SCHEDULER_H__
 #define __SCHEDULER_H__
 
@@ -73,20 +73,20 @@ typedef struct
     //! ticks.  If this value is 0, the function will be called on every call
     //! to SchedulerRun.
     //
-    unsigned long ulFrequencyTicks;
+    uint32_t ui32FrequencyTicks;
 
     //
     //! Tick count when this function was last called.  This field is updated
     //! by the scheduler.
     //
-    unsigned long ulLastCall;
+    uint32_t ui32LastCall;
 
     //
     //! A flag indicating whether or not this task is active.  If true, the
     //! function will be called periodically.  If false, the function is
     //! disabled and will not be called.
     //
-    tBoolean bActive;
+    bool bActive;
 }
 tSchedulerTask;
 
@@ -104,7 +104,7 @@ extern tSchedulerTask g_psSchedulerTable[];
 //! number of entries in the g_psSchedulerTable array.
 //
 //*****************************************************************************
-extern unsigned long g_ulSchedulerNumTasks;
+extern uint32_t g_ui32SchedulerNumTasks;
 
 //*****************************************************************************
 //
@@ -119,14 +119,14 @@ extern unsigned long g_ulSchedulerNumTasks;
 //
 //*****************************************************************************
 extern void SchedulerSysTickIntHandler(void);
-extern void SchedulerInit(unsigned long ulTicksPerSecond);
+extern void SchedulerInit(uint32_t ui32TicksPerSecond);
 extern void SchedulerRun(void);
-extern void SchedulerTaskEnable(unsigned long ulIndex, tBoolean bRunNow);
-extern void SchedulerTaskDisable(unsigned long ulIndex);
-extern unsigned long SchedulerTickCountGet(void);
-extern unsigned long SchedulerElapsedTicksGet(unsigned long ulTickCount);
-extern unsigned long SchedulerElapsedTicksCalc(unsigned long ulTickStart,
-                                               unsigned long ulTickEnd);
+extern void SchedulerTaskEnable(uint32_t ui32Index, bool bRunNow);
+extern void SchedulerTaskDisable(uint32_t ui32Index);
+extern uint32_t SchedulerTickCountGet(void);
+extern uint32_t SchedulerElapsedTicksGet(uint32_t ui32TickCount);
+extern uint32_t SchedulerElapsedTicksCalc(uint32_t ui32TickStart,
+                                               uint32_t ui32TickEnd);
 
 //*****************************************************************************
 //

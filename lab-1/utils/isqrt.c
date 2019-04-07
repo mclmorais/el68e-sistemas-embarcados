@@ -2,7 +2,7 @@
 //
 // isqrt.c - Integer square root.
 //
-// Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2005-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,10 +18,11 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
+#include <stdint.h>
 #include "utils/isqrt.h"
 
 //*****************************************************************************
@@ -35,7 +36,7 @@
 //
 //! Compute the integer square root of an integer.
 //!
-//! \param ulValue is the value whose square root is desired.
+//! \param ui32Value is the value whose square root is desired.
 //!
 //! This function will compute the integer square root of the given input
 //! value.  Since the value returned is also an integer, it is actually better
@@ -45,53 +46,53 @@
 //! \return Returns the square root of the input value.
 //
 //*****************************************************************************
-unsigned long
-isqrt(unsigned long ulValue)
+uint32_t
+isqrt(uint32_t ui32Value)
 {
-    unsigned long ulRem, ulRoot, ulIdx;
+    uint32_t ui32Rem, ui32Root, ui32Idx;
 
     //
     // Initialize the remainder and root to zero.
     //
-    ulRem = 0;
-    ulRoot = 0;
+    ui32Rem = 0;
+    ui32Root = 0;
 
     //
     // Loop over the sixteen bits in the root.
     //
-    for(ulIdx = 0; ulIdx < 16; ulIdx++)
+    for(ui32Idx = 0; ui32Idx < 16; ui32Idx++)
     {
         //
         // Shift the root up by a bit to make room for the new bit that is
         // about to be computed.
         //
-        ulRoot <<= 1;
+        ui32Root <<= 1;
 
         //
         // Get two more bits from the input into the remainder.
         //
-        ulRem = ((ulRem << 2) + (ulValue >> 30));
-        ulValue <<= 2;
+        ui32Rem = ((ui32Rem << 2) + (ui32Value >> 30));
+        ui32Value <<= 2;
 
         //
         // Make the test root be 2n + 1.
         //
-        ulRoot++;
+        ui32Root++;
 
         //
         // See if the root is greater than the remainder.
         //
-        if(ulRoot <= ulRem)
+        if(ui32Root <= ui32Rem)
         {
             //
             // Subtract the test root from the remainder.
             //
-            ulRem -= ulRoot;
+            ui32Rem -= ui32Root;
 
             //
             // Increment the root, setting the second LSB.
             //
-            ulRoot++;
+            ui32Root++;
         }
         else
         {
@@ -99,14 +100,14 @@ isqrt(unsigned long ulValue)
             // The root is greater than the remainder, so the new bit of the
             // root is actually zero.
             //
-            ulRoot--;
+            ui32Root--;
         }
     }
 
     //
     // Return the computed root.
     //
-    return(ulRoot >> 1);
+    return(ui32Root >> 1);
 }
 
 //*****************************************************************************

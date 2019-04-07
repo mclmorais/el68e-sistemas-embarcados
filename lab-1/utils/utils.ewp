@@ -16,15 +16,15 @@
                 <debug>1</debug>
                 <option>
                     <name>ExePath</name>
-                    <state>ewarm\Exe</state>
+                    <state>Debug\Exe</state>
                 </option>
                 <option>
                     <name>ObjPath</name>
-                    <state>ewarm\Obj</state>
+                    <state>Debug\Obj</state>
                 </option>
                 <option>
                     <name>ListPath</name>
-                    <state>ewarm\List</state>
+                    <state>Debug\List</state>
                 </option>
                 <option>
                     <name>GEndianMode</name>
@@ -121,7 +121,7 @@
                 </option>
                 <option>
                     <name>OGUseCmsis</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OGUseCmsisDspLib</name>
@@ -222,10 +222,11 @@
                     <name>CCDefines</name>
                     <state>ewarm</state>
                     <state>PART_TM4C1294NCPDT</state>
+                    <state>UART_BUFFERED</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>CCPreprocComments</name>
@@ -346,10 +347,7 @@
                 </option>
                 <option>
                     <name>CCIncludePath2</name>
-                    <state>$PROJ_DIR$\..\..\..\</state>
-                    <state>$PROJ_DIR$\..\</state>
-                    <state>$PROJ_DIR$\..\inc</state>
-                    <state>$PROJ_DIR$\..\driverlib</state>
+                    <state>$PROJ_DIR$\..</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -416,7 +414,7 @@
                 </option>
                 <option>
                     <name>IccCppInlineSemantics</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>IccCmsis</name>
@@ -603,7 +601,7 @@
                 </option>
                 <option>
                     <name>AOutputFile</name>
-                    <state>$FILE_BNAME$.o</state>
+                    <state></state>
                 </option>
                 <option>
                     <name>ALimitErrorsCheck</name>
@@ -772,7 +770,7 @@
                 </option>
                 <option>
                     <name>IlinkIcfFile</name>
-                    <state>$TOOLKIT_DIR$\CONFIG\generic_cortex.icf</state>
+                    <state>lnk0t.icf</state>
                 </option>
                 <option>
                     <name>IlinkIcfFileSlave</name>
@@ -832,7 +830,7 @@
                 </option>
                 <option>
                     <name>IlinkProgramEntryLabel</name>
-                    <state>__iar_program_start</state>
+                    <state></state>
                 </option>
                 <option>
                     <name>DoFill</name>
@@ -1005,7 +1003,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>utils_import_lib.o</state>
+                    <state>###Unitialized###</state>
                 </option>
                 <option>
                     <name>OILinkExtraOption</name>
@@ -1030,7 +1028,7 @@
                 </option>
                 <option>
                     <name>IarchiveOutput</name>
-                    <state>C:\repositories\sistemas-embarcados\lab-1\utils\ewarm\Exe\utils.a</state>
+                    <state>C:\repositories\sistemas-embarcados\lab-1\utils\Debug\Exe\utils.a</state>
                 </option>
             </data>
         </settings>

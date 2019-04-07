@@ -2,7 +2,7 @@
 //
 // cpu_usage.h - Prototypes for the CPU utilization routines.
 //
-// Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
+// Copyright (c) 2007-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
 // 
 // Texas Instruments (TI) is supplying this software for use solely and
@@ -18,7 +18,7 @@
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
 // 
-// This is part of revision 9453 of the Stellaris Firmware Development Package.
+// This is part of revision 2.1.4.178 of the Tiva Utility Library.
 //
 //*****************************************************************************
 
@@ -41,9 +41,9 @@ extern "C"
 // Prototypes for the CPU utilization routines.
 //
 //*****************************************************************************
-extern unsigned long CPUUsageTick(void);
-extern void CPUUsageInit(unsigned long ulClockRate, unsigned long ulRate,
-                         unsigned long ulTimer);
+extern uint32_t CPUUsageTick(void);
+extern void CPUUsageInit(uint32_t ui32ClockRate, uint32_t ui32Rate,
+                         uint32_t ui32Timer);
 
 //*****************************************************************************
 //
