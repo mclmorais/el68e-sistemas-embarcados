@@ -11,7 +11,7 @@
 
 #include "utils/uartstdio.h"
 
-#define TIME_BASE_MAX 961538
+#define TIME_BASE_MAX 724992//799985//773329//773700//961538
 
 void readGPIO();
 void timeBaseMenu(void);
@@ -58,36 +58,39 @@ void main(void)
   uint32_t timeBaseCounter = 0;
 
   uint32_t frequencyCounter = 0;
-  uint8_t readyForNextReading = true;
+
+  bool expectedPinMeasure = false;
+
+  uint32_t x = 0;
+  bool y = false;
 
   while (1)
   {
     // Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
+    frequencyCounter = 0;
     for (timeBaseCounter = 0; timeBaseCounter < timeBaseMax; timeBaseCounter++)
     {
-      bool isPinHigh = (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1;
+      bool pinMeasure = (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1;
 
-      // Conta um pulso se este foi o primeiro LOW recebido após o pino estar em HIGH.
-      // Após medir, impede que pulsos em LOW sejam contabilizados até um pulso em HIGH ser adquirido novamente.
-      // (impede que várias contagem sejam feitas no mesmo pulso LOW caso faquisição >> fmedida)
-      if (readyForNextReading && !isPinHigh)
+      if (pinMeasure == expectedPinMeasure)
       {
         frequencyCounter++;
-        readyForNextReading = false;
+        expectedPinMeasure = !pinMeasure;
       }
-      else if (isPinHigh)
+      else
       {
-        readyForNextReading = true;
+        x++;
+        y = !y;
       }
     }
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
 
-    UARTprintf("Frequencia: %i", frequencyCounter);
+    UARTprintf("Frequencia: %i", frequencyCounter /2);
     UARTprintf(khzScale ? "KHz\n" : "Hz\n");
-    frequencyCounter = 0;
+    
 
-    uint8_t bytesAvailable = UARTRxBytesAvail();
+     uint8_t bytesAvailable = UARTRxBytesAvail();
     if (bytesAvailable > 0)
     {
       uint8_t receivedCharacter = UARTgetc();
@@ -137,7 +140,7 @@ void main(void)
       {
         UARTFlushRx();
       }
-    }
+    } 
 
   } // while
 } // main
