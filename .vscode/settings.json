@@ -1,7 +1,0 @@
-{
-  "iar.enabled": false,
-  "iarvsc.workbench": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2",
-  "iarvsc.compiler": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\arm\\bin\\iccarm.exe",
-  "iarvsc.ewp": "c:\\repositories\\sistemas-embarcados\\lab-1\\es_simples\\es_simples.ewp",
-  "iarvsc.configuration": "Debug"
-}
