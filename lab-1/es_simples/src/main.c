@@ -11,7 +11,7 @@
 
 #include "utils/uartstdio.h"
 
-#define TIME_BASE_MAX 724992//799985//773329//773700//961538
+#define TIME_BASE_MAX 2698574//799985//773329//773700//961538
 
 void readGPIO();
 void timeBaseMenu(void);
@@ -53,94 +53,74 @@ void main(void)
 
   UARTEchoSet(false);
 
-  UARTprintf("Laboratorio 1 - Frequencimetro\n");
+  //UARTprintf("Laboratorio 1 - Frequencimetro\n");
 
-  uint32_t timeBaseCounter = 0;
+  extern uint32_t frequencyMeasure();
+
+
 
   uint32_t frequencyCounter = 0;
-
-  bool expectedPinMeasure = false;
-
-  uint32_t x = 0;
-  bool y = false;
-
   while (1)
   {
-    // Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
-    frequencyCounter = 0;
-    for (timeBaseCounter = 0; timeBaseCounter < timeBaseMax; timeBaseCounter++)
-    {
-      bool pinMeasure = (GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1;
+    frequencyCounter = frequencyMeasure(TIME_BASE_MAX);
 
-      if (pinMeasure == expectedPinMeasure)
-      {
-        frequencyCounter++;
-        expectedPinMeasure = !pinMeasure;
-      }
-      else
-      {
-        x++;
-        y = !y;
-      }
-    }
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
 
-    UARTprintf("Frequencia: %i", frequencyCounter /2);
-    UARTprintf(khzScale ? "KHz\n" : "Hz\n");
+    UARTprintf("%i\n", frequencyCounter);
+    //UARTprintf(khzScale ? "KHz\n" : "Hz\n");
     
 
-     uint8_t bytesAvailable = UARTRxBytesAvail();
-    if (bytesAvailable > 0)
-    {
-      uint8_t receivedCharacter = UARTgetc();
+    //  uint8_t bytesAvailable = UARTRxBytesAvail();
+    // if (bytesAvailable > 0)
+    // {
+    //   uint8_t receivedCharacter = UARTgetc();
 
-      if (receivedCharacter == 'T')
-      {
-        UARTprintf("Digite a constante de tempo desejada:\n");
+    //   if (receivedCharacter == 'T')
+    //   {
+    //     UARTprintf("Digite a constante de tempo desejada:\n");
 
-        char stringifiedNumber[11];
-        uint32_t decodedConstant = 0;
-        UARTgets(stringifiedNumber, 11);
+    //     char stringifiedNumber[11];
+    //     uint32_t decodedConstant = 0;
+    //     UARTgets(stringifiedNumber, 11);
 
-        //Transforma string numérica recebida em um unsigned integer
-        decodedConstant += (stringifiedNumber[9] - 48);
-        for (uint8_t i = 0; i < 9; i++)
-        {
-          int powerOfTen = 1;
-          for (uint8_t j = 0; j < (9 - i); j++)
-            powerOfTen *= 10;
-          decodedConstant += (stringifiedNumber[i] - 48) * powerOfTen;
-        }
+    //     //Transforma string numérica recebida em um unsigned integer
+    //     decodedConstant += (stringifiedNumber[9] - 48);
+    //     for (uint8_t i = 0; i < 9; i++)
+    //     {
+    //       int powerOfTen = 1;
+    //       for (uint8_t j = 0; j < (9 - i); j++)
+    //         powerOfTen *= 10;
+    //       decodedConstant += (stringifiedNumber[i] - 48) * powerOfTen;
+    //     }
 
-        timeBaseMax = decodedConstant;
-        UARTprintf("%u\n", timeBaseMax);
-      }
-      else if (receivedCharacter == 'E')
-      {
-        UARTprintf("Digite a escala desejada (h ou k):\n");
+    //     timeBaseMax = decodedConstant;
+    //     UARTprintf("%u\n", timeBaseMax);
+    //   }
+    //   else if (receivedCharacter == 'E')
+    //   {
+    //     UARTprintf("Digite a escala desejada (h ou k):\n");
 
-        while (!UARTBusy(UART0_BASE))
-        {
-        }
+    //     while (!UARTBusy(UART0_BASE))
+    //     {
+    //     }
 
-        switch (UARTgetc())
-        {
-        case 'k':
-          khzScale = true;
-          break;
-        default:
-          khzScale = false;
-          break;
-        }
+    //     switch (UARTgetc())
+    //     {
+    //     case 'k':
+    //       khzScale = true;
+    //       break;
+    //     default:
+    //       khzScale = false;
+    //       break;
+    //     }
 
-        timeBaseMax /= (khzScale ? 10 : 1); // TODO: repensar
-      }
-      else
-      {
-        UARTFlushRx();
-      }
-    } 
+    //     timeBaseMax /= (khzScale ? 10 : 1); // TODO: repensar
+    //   }
+    //   else
+    //   {
+    //     UARTFlushRx();
+    //   }
+    //} 
 
   } // while
 } // main
