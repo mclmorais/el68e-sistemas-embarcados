@@ -19,52 +19,48 @@ bool khzScale = false;
 
 int main(void)
 {
-  uint32_t ui32SysClock = SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
-                                              SYSCTL_OSC_MAIN |
-                                              SYSCTL_USE_PLL |
-                                              SYSCTL_CFG_VCO_480),
-                                             24000000); // PLL em 24MHz
+	uint32_t ui32SysClock = SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
+	                                            SYSCTL_OSC_MAIN |
+	                                            SYSCTL_USE_PLL |
+	                                            SYSCTL_CFG_VCO_480),
+	                                           24000000); // PLL em 24MHz
 
-  // Ativa porta N de GPIO e seta pinos 0 e 1 como saída e entrada
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
-  while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION))
-    ;
+	// Inicialização de GPIO
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION))
+	{
+	}
+	GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0);
+	GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);
 
-  GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0);
-  GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);
+	// Inicialização da UART
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0))
+	{
+	}
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA))
+	{
+	}
+	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+	GPIOPinConfigure(GPIO_PA0_U0RX);
+	GPIOPinConfigure(GPIO_PA1_U0TX);
+	UARTStdioConfig(0, 57600, ui32SysClock);
+	UARTEchoSet(false);
 
-  // Ativa UART0
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-  while (!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0));
+	uint32_t frequencyCounter = 0 + 1;
 
-  // Ativa pinos da porta A para utilização da UART
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-  while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA));
-  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-  GPIOPinConfigure(GPIO_PA0_U0RX);
-  GPIOPinConfigure(GPIO_PA1_U0TX);
+	UARTprintf("Laboratorio 1 - Frequencimetro\n");
+	while (1)
+	{
+		// Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
+		GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
 
-  UARTStdioConfig(0, 57600, ui32SysClock);
-
-  UARTEchoSet(false);
-
-  UARTprintf("Laboratorio 1 - Frequencimetro\n");
-
-
-	
-	uint32_t frequencyCounter = 0;
-
-  while (1)
-  {
-    // Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
-		
 		frequencyCounter = frequencyMeasure(TIME_BASE_MAX);
-		
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
 
-    UARTprintf("Frequencia: %i ", frequencyCounter/2);
-    UARTprintf(khzScale ? "KHz\n" : "Hz\n");
-    
-  } // while
-} // main
+		GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
+
+		UARTprintf("Frequencia: %i ", frequencyCounter / 2);
+		UARTprintf(khzScale ? "KHz\n" : "Hz\n");
+	}         // while
+}         // main
