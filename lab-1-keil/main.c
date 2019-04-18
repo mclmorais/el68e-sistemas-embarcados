@@ -11,15 +11,19 @@
 
 #include "utils/uartstdio.h"
 
+// Medida máxima para BPL: 1,455MHz
+
 #define CLOCK 24000000
 
+#define MAX_COUNT 2999951//3000000//2666624
+
 #if CLOCK == 120000000
-	#define TIME_BASE_MAX 2666624 * 5
+	#define TIME_BASE_MAX MAX_COUNT * 5
 #else
-	#define TIME_BASE_MAX 2666624
+	#define TIME_BASE_MAX MAX_COUNT
 #endif
 
-extern uint32_t frequencyMeasure(uint32_t);
+extern uint32_t frequencyMeasure(int32_t);
 
 bool khzScale = false;
 
@@ -75,6 +79,7 @@ int main(void)
 			uartCounter = 0;
 		}
 
+		int x = 100;
 		uint8_t bytesAvailable = UARTRxBytesAvail();
 		if (bytesAvailable > 0)
 		{

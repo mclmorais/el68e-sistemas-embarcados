@@ -13,7 +13,7 @@ frequencyMeasure
 	PUSH 	{R5}
 	LDR 	R1, =GPIO_PORTN_AHB_DATA_BITS_R
 	ADD 	R1, R1, #8
-	MOV 	R2, #0 ; timeBaseCounter = 0
+	MOV 	R2, R0 ; timeBaseCounter = MAX_TIME_COUNTER
 	MOV 	R4, #0 ; expectedPinMeasure = false;
 	MOV 	R5, #0 ; frequencyCounter = 0
 
@@ -30,9 +30,8 @@ newMeasure
 	ITT 		NE 						; if (pinMeasure != expectedPinMeasure)
 	ADDNE 	R5, #1 				; frequencyCounter++
 	MOVNE 	R4, R3 				; expectedPinMeasure = pinMeasure
-	ADD 		R2, R2, #1 		; timeBaseCounter++
-	CMP 		R2, R0 				; timeBaseCounter < timerBaseMax
-	BLT 		newMeasure
+	SUBS 		R2, R2, #1 		; timeBaseCounter++
+	BPL 		newMeasure
 	MOV 		R0, R5
 	POP 		{R5}
 	BX 			LR
