@@ -16,7 +16,7 @@
 
 #define MAX_COUNT 2999950 //2999951
 
-#define CLOCK 24000000
+#define CLOCK 120000000
 
 #if CLOCK == 120000000
 	#define TIME_BASE_MAX MAX_COUNT * 5
@@ -71,8 +71,8 @@ int main(void)
 		}
 		frequencyCounter = frequencyMeasure(khzScale ? TIME_BASE_MAX / 10 : TIME_BASE_MAX);
 
-		UARTprintf("Frequencia: %i ", frequencyCounter / (khzScale ? 200 : 2));
-		UARTprintf(khzScale ? "KHz\n" : "Hz\n");
+		UARTprintf("%i\n", frequencyCounter / (khzScale ? 200 : 2));
+		//	UARTprintf(khzScale ? "KHz\n" : "Hz\n");
 
 		uint8_t bytesAvailable = UARTRxBytesAvail();
 		if (bytesAvailable > 0)
