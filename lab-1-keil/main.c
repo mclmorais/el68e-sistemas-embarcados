@@ -11,11 +11,12 @@
 
 #include "utils/uartstdio.h"
 
-// Medida máxima para BPL: 1,455MHz
+// Medida máxima para BPL 24 MHz: 1,455MHz
+// Medida máxima para BPL 120MHz: 7,300MHz
+
+#define MAX_COUNT 2999950 //2999951
 
 #define CLOCK 24000000
-
-#define MAX_COUNT 2999951//3000000//2666624
 
 #if CLOCK == 120000000
 	#define TIME_BASE_MAX MAX_COUNT * 5
@@ -58,28 +59,21 @@ int main(void)
 	UARTStdioConfig(0, 57600, ui32SysClock);
 	UARTEchoSet(false);
 
-	uint32_t frequencyCounter = 23 + 5;
-
-	uint32_t uartCounter = 0;
-
+	uint32_t frequencyCounter = 0;
 	UARTprintf("Laboratorio 1 - Frequencimetro\n");
 	while (1)
 	{
-		// Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
-		GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
-
-		frequencyCounter = frequencyMeasure(khzScale ? TIME_BASE_MAX / 1000 : TIME_BASE_MAX);
-
-		GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
-
-		if(++uartCounter > (khzScale ? 100 : 0))
+		while((GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) == GPIO_PIN_1)
 		{
-			UARTprintf("Frequencia: %i ", frequencyCounter / 2);
-			UARTprintf(khzScale ? "KHz\n" : "Hz\n");
-			uartCounter = 0;
 		}
+		while((GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1) != GPIO_PIN_1)
+		{
+		}
+		frequencyCounter = frequencyMeasure(khzScale ? TIME_BASE_MAX / 10 : TIME_BASE_MAX);
 
-		int x = 100;
+		UARTprintf("Frequencia: %i ", frequencyCounter / (khzScale ? 200 : 2));
+		UARTprintf(khzScale ? "KHz\n" : "Hz\n");
+
 		uint8_t bytesAvailable = UARTRxBytesAvail();
 		if (bytesAvailable > 0)
 		{
