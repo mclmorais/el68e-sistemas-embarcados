@@ -16,7 +16,7 @@
 #if CLOCK == 120000000
 	#define TIME_BASE_MAX 2666624 * 5
 #else
-	#define TIME_BASE_MAX 2666//624
+	#define TIME_BASE_MAX 2666624
 #endif
 
 extern uint32_t frequencyMeasure(uint32_t);
@@ -54,7 +54,7 @@ int main(void)
 	UARTStdioConfig(0, 57600, ui32SysClock);
 	UARTEchoSet(false);
 
-	uint32_t frequencyCounter = 0;
+	uint32_t frequencyCounter = 23 + 5;
 
 	uint32_t uartCounter = 0;
 
@@ -64,11 +64,11 @@ int main(void)
 		// Pino N0 é ligado enquanto contagem de pulsos está sendo realizada.
 		GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
 
-		frequencyCounter = frequencyMeasure(khzMode ? TIME_BASE_MAX / 1000 : TIME_BASE_MAX);
+		frequencyCounter = frequencyMeasure(khzScale ? TIME_BASE_MAX / 1000 : TIME_BASE_MAX);
 
 		GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x01);
 
-		if(++uartCounter > 100)
+		if(++uartCounter > (khzScale ? 100 : 0))
 		{
 			UARTprintf("Frequencia: %i ", frequencyCounter / 2);
 			UARTprintf(khzScale ? "KHz\n" : "Hz\n");
@@ -80,24 +80,13 @@ int main(void)
 		{
 			uint8_t receivedCharacter = UARTgetc();
 
-			if (receivedCharacter == 'E')
+			if (receivedCharacter == 'k')
 			{
-				UARTprintf("Digite a escala desejada (h ou k):\n");
-
-				while (!UARTBusy(UART0_BASE))
-				{
-				}
-
-				switch (UARTgetc())
-				{
-				case 'k':
-					khzScale = true;
-					break;
-				default:
-					khzScale = false;
-					break;
-				}
-
+				khzScale = true;
+			}
+			else if (receivedCharacter == 'h')
+			{
+				khzScale = false;
 			}
 			else
 			{

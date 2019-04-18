@@ -6,9 +6,9 @@ GPIO_PORTN_AHB_DATA_BITS_R  EQU    0x40064000
 	EXPORT	frequencyMeasure
 
 ; Entrada:
-; R0 -> Valor máximo da base de tempo
-; Saída:
-; R0 -> Medida de Frequência
+; R0 -> Valor mï¿½ximo da base de tempo
+; Saï¿½da:
+; R0 -> Medida de Frequï¿½ncia
 frequencyMeasure
 	PUSH 	{R5}
 	LDR 	R1, =GPIO_PORTN_AHB_DATA_BITS_R
@@ -17,18 +17,25 @@ frequencyMeasure
 	MOV 	R4, #0 ; expectedPinMeasure = false;
 	MOV 	R5, #0 ; frequencyCounter = 0
 
+	; R0: Tamanho da base de tempo
+	; R1: EndereÃ§o do GPIO
+	; R2: iterador da base de tempo
+	; R3: valor medido do GPIO
+	; R4: valor esperado do GPIO
+	; R5: contador de frequencia
+
 newMeasure
-	LDR 	R3, [R1] ; pinMeasure = GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_1) & GPIO_PIN_1)
-	CMP 	R3, R4
-	ITT 	NE ; if (pinMeasure != expectedPinMeasure)
-	ADDNE 	R5, #1 ; frequencyCounter++
-	MOVNE 	R4, R3 ; expectedPinMeasure = pinMeasure
-	ADD 	R2, R2, #1 ; timeBaseCounter++
-	CMP 	R2, R0 ; timeBaseCounter < timerBaseMax
-	BLT 	newMeasure
-	MOV 	R0, R5
-	POP 	{R5}
-	BX 		LR
+	LDR 		R3, [R1] 			; Read GPIO
+	CMP 		R3, R4				
+	ITT 		NE 						; if (pinMeasure != expectedPinMeasure)
+	ADDNE 	R5, #1 				; frequencyCounter++
+	MOVNE 	R4, R3 				; expectedPinMeasure = pinMeasure
+	ADD 		R2, R2, #1 		; timeBaseCounter++
+	CMP 		R2, R0 				; timeBaseCounter < timerBaseMax
+	BLT 		newMeasure
+	MOV 		R0, R5
+	POP 		{R5}
+	BX 			LR
 	
 	ALIGN
 	END
