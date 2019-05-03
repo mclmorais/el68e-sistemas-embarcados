@@ -8,6 +8,7 @@
 #include "driverlib/gpio.h"
 #include "driverlib/systick.h"
 #include "driverlib/uart.h"
+#include "driverlib/timer.h"
 
 #include "utils/uartstdio.h"
 
@@ -36,6 +37,12 @@ int main(void)
 	                                            SYSCTL_CFG_VCO_480),
 	                                           CLOCK); // PLL em 24MHz
 
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_TIMER0))
+		;
+
+	TimerConfigure(TIMER0_BASE, (TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT | TIMER_CFG_B_CAP_COUNT));
+
 	// Inicialização de GPIO
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
 	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION))
@@ -47,7 +54,7 @@ int main(void)
 	// Inicialização da UART
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0))
-	{
+	{ 
 	}
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
 	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA))
