@@ -9,50 +9,80 @@
 #include "driverlib/systick.h"
 #include "driverlib/uart.h"
 #include "driverlib/timer.h"
-
+#include "driverlib/pwm.h"
 #include "utils/uartstdio.h"
 
-#define CLOCK 120000000
-
 bool khzScale = false;
+uint8_t flagUART = false;
+uint8_t freqCarry = 0;
+uint32_t freqMeasure = 0;
+
+void SysTick_Handler(void){
+	freqMeasure = (TimerValueGet(TIMER0_BASE, TIMER_A) + 0x00FFFFFF * freqCarry) / 2;
+	freqCarry = 0;
+	TIMER0_TAV_R = 0;
+	flagUART++;
+}
+
+void Time0A_Handler(void){
+	freqCarry++;
+	TimerIntClear(TIMER0_BASE, TIMER_CAPA_MATCH);
+}
 
 int main(void)
 {
-	uint32_t ui32SysClock = SysCtlClockFreqSet(
-		(SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN | SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480),
-		CLOCK);                            // PLL em 24MHz
+	uint32_t ui32SysClock = SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
+	                                            SYSCTL_OSC_MAIN |
+	                                            SYSCTL_USE_PLL |
+	                                            SYSCTL_CFG_VCO_480),
+	                                           24000000); // PLL em 24MHz
 
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_TIMER0));
+	SysTickEnable();
+	SysTickPeriodSet(ui32SysClock / 2);
 
-	TimerConfigure(TIMER0_BASE, (TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_ONE_SHOT | TIMER_CFG_B_CAP_COUNT));
-
-	// Inicialização de GPIO
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
-	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION));
-
-	GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_1);
-
-	// Inicialização da UART
+	// Ativa UART0
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0));
 
+	// Ativa pinos da porta A para utilização da UART
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
 	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA));
-
 	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 	GPIOPinConfigure(GPIO_PA0_U0RX);
 	GPIOPinConfigure(GPIO_PA1_U0TX);
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+	while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOD));
+	GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_0);
+	GPIOPinConfigure(GPIO_PD0_T0CCP0);
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_TIMER0));
+	TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_COUNT_UP);
+	TimerControlEvent(TIMER0_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES);
+	TimerLoadSet(TIMER0_BASE, TIMER_A, 0xFFFF);
+	TimerMatchSet(TIMER0_BASE, TIMER_A, 0xFFFF);
+	TimerPrescaleMatchSet(TIMER0_BASE, TIMER_A, 0x00FF);
+	TimerIntEnable(TIMER0_BASE, TIMER_CAPA_MATCH);
+	TimerIntRegister(TIMER0_BASE, TIMER_A, Time0A_Handler);
+	TimerEnable(TIMER0_BASE, TIMER_A);
+
 	UARTStdioConfig(0, 57600, ui32SysClock);
+
 	UARTEchoSet(false);
 
-	uint32_t frequencyCounter = 0;
+	SysTickIntEnable();
+
 	UARTprintf("Laboratorio 2 - Frequencimetro\n");
 
 	while (1)
 	{
-		UARTprintf("%i\n", frequencyCounter / (khzScale ? 200 : 2));
-
+		if(UARTTxBytesFree() == UART_TX_BUFFER_SIZE && flagUART >= 2)
+		{
+			UARTprintf("Frequency: %i", freqMeasure);
+			UARTprintf(khzScale ? "KHz\n" : "Hz\n");
+			flagUART = 0;
+		}
 		uint8_t bytesAvailable = UARTRxBytesAvail();
 		if (bytesAvailable > 0)
 		{
@@ -61,15 +91,17 @@ int main(void)
 			if (receivedCharacter == 'k')
 			{
 				khzScale = true;
+				SysTickPeriodSet(ui32SysClock / 1000);
 			}
 			else if (receivedCharacter == 'h')
 			{
 				khzScale = false;
+				SysTickPeriodSet(ui32SysClock);
 			}
 			else
 			{
 				UARTFlushRx();
 			}
 		}
-	}         // while
-}         // main
+	} // while
+} // main
