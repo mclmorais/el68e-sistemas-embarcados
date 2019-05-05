@@ -1,8 +1,11 @@
+// Keil ARM Compiler
 #include <stdbool.h>
 #include <stdint.h>
-#include "inc/tm4c1294ncpdt.h" // CMSIS-Core
+// CMSIS-Core
+#include "inc/tm4c1294ncpdt.h"
 #include "inc/hw_memmap.h"
-#include "driverlib/sysctl.h" // driverlib
+// Driverlib
+#include "driverlib/sysctl.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/rom.h"
 #include "driverlib/gpio.h"
@@ -11,20 +14,24 @@
 #include "driverlib/timer.h"
 #include "driverlib/pwm.h"
 #include "utils/uartstdio.h"
+// Implementações
+#include "timer_implementation.h"
 
 bool khzScale = false;
 uint8_t flagUART = false;
-uint8_t freqCarry = 0;
+
 uint32_t freqMeasure = 0;
 
-void SysTick_Handler(void){
+void SysTick_Handler(void)
+{
 	freqMeasure = (TimerValueGet(TIMER0_BASE, TIMER_A) + 0x00FFFFFF * freqCarry);
 	freqCarry = 0;
 	TIMER0_TAV_R = 0;
 	flagUART++;
 }
 
-void Time0A_Handler(void){
+void Time0A_Handler(void)
+{
 	freqCarry++;
 	TimerIntClear(TIMER0_BASE, TIMER_CAPA_MATCH);
 }
