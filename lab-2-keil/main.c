@@ -18,7 +18,7 @@ uint8_t freqCarry = 0;
 uint32_t freqMeasure = 0;
 
 void SysTick_Handler(void){
-	freqMeasure = (TimerValueGet(TIMER0_BASE, TIMER_A) + 0x00FFFFFF * freqCarry) / 2;
+	freqMeasure = (TimerValueGet(TIMER0_BASE, TIMER_A) + 0x00FFFFFF * freqCarry);
 	freqCarry = 0;
 	TIMER0_TAV_R = 0;
 	flagUART++;
