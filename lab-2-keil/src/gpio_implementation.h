@@ -1,5 +1,5 @@
-#if !defined(__GPIO_IMPLEMENTATION_H)
-#define __GPIO_IMPLEMENTATION_H
+#if !defined(__GPIO_IMPLEMENTATION_H_)
+#define __GPIO_IMPLEMENTATION_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,6 +10,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 
-void ConfigGPIOAsCounter(void);
+void ConfigGPIOCounter(void);
+void ConfigGPIOUART(void);
 
-#endif // __GPIO_IMPLEMENTATION_H
+#endif // __GPIO_IMPLEMENTATION_H_
