@@ -11,6 +11,5 @@
 #include "driverlib/systick.h"
 
 void ConfigSysTick(uint32_t systemClock);
-void SetFasterSysTick(bool faster);
 
 #endif // __SYSTICK_IMPLEMENTATION_H_

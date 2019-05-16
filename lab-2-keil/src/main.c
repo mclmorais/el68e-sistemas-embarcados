@@ -18,22 +18,26 @@ bool khzScale = false;
 
 void SysTick_Handler(void)
 {
-	freqMeasure = (TimerValueGet(TIMER0_BASE, TIMER_A) + 0x00FFFFFF * freqCarry);
-	freqCarry = 0;
-	TIMER0_TAV_R = 0;
-	flagUART++;
+	if(timerCount++ > (khzScale ? 1 : 1000)){
+		freqMeasure = TimerValueGet(TIMER0_BASE, TIMER_A) + 0xFFFF * freqCarry;
+		TIMER0_TAV_R = 0;
+		freqCarry = 0;
+		flagUART++;
+		timerCount = 0;
+	}
 }
 
 void Time0A_Handler(void)
 {
+	TimerIntDisable(TIMER0_BASE, TIMER_CAPA_MATCH); 
 	freqCarry++;
 	TimerIntClear(TIMER0_BASE, TIMER_CAPA_MATCH);
+	TimerIntEnable(TIMER0_BASE, TIMER_CAPA_MATCH); 
 }
 
 void inputCallback(bool khzChosen)
 {
 	khzScale = khzChosen;
-	SetFasterSysTick(khzScale);
 }
 
 int main(void)

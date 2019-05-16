@@ -11,6 +11,7 @@
 
 extern uint8_t freqCarry;
 extern uint32_t freqMeasure;
+extern uint32_t timerCount;
 
 void Time0A_Handler(void);
 
