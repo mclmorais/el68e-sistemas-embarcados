@@ -9,7 +9,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
 
-extern uint8_t freqCarry;
+extern uint32_t freqCarry;
 extern uint32_t freqMeasure;
 extern uint32_t timerCount;
 

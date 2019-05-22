@@ -18,7 +18,7 @@ void ConfigUART(uint32_t systemClock)
 
 void PrintFrequency(uint32_t freqMeasure, bool khzScale)
 {
-	if(UARTTxBytesFree() == UART_TX_BUFFER_SIZE && flagUART >= 2)
+	if(UARTTxBytesFree() == UART_TX_BUFFER_SIZE && flagUART > 0)
 	{
 		UARTprintf("Frequency: %i", freqMeasure);
 		UARTprintf(khzScale ? "KHz\n" : "Hz\n");

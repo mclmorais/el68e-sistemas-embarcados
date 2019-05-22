@@ -5,9 +5,7 @@ void (*interruptCallback)();
 
 void ConfigSysTick(uint32_t systemClock)
 {
-	// TODO: Generalizar para qualquer system clock
-	sysTickPeriod = systemClock / 1000;
-
+	sysTickPeriod = ((systemClock - 80) / 10);
 
 	SysTickEnable();
 	SysTickPeriodSet(sysTickPeriod);

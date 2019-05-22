@@ -18,8 +18,10 @@ bool khzScale = false;
 
 void SysTick_Handler(void)
 {
-	if(timerCount++ > (khzScale ? 1 : 1000)){
-		freqMeasure = TimerValueGet(TIMER0_BASE, TIMER_A) + 0xFFFF * freqCarry;
+	if(++timerCount >= (khzScale ? 1 : 10))
+	{
+		freqMeasure = (TimerValueGet(TIMER0_BASE, TIMER_A) + 0xFFFF * freqCarry) / (khzScale ? 100 : 1);
+		//	freqMeasure -= (freqMeasure / 1000000) + 1;
 		TIMER0_TAV_R = 0;
 		freqCarry = 0;
 		flagUART++;
@@ -29,10 +31,10 @@ void SysTick_Handler(void)
 
 void Time0A_Handler(void)
 {
-	TimerIntDisable(TIMER0_BASE, TIMER_CAPA_MATCH); 
+	TimerIntDisable(TIMER0_BASE, TIMER_CAPA_MATCH);
 	freqCarry++;
 	TimerIntClear(TIMER0_BASE, TIMER_CAPA_MATCH);
-	TimerIntEnable(TIMER0_BASE, TIMER_CAPA_MATCH); 
+	TimerIntEnable(TIMER0_BASE, TIMER_CAPA_MATCH);
 }
 
 void inputCallback(bool khzChosen)
@@ -44,7 +46,7 @@ int main(void)
 {
 	uint32_t ui32SysClock = SysCtlClockFreqSet(
 		(SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN | SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480),
-		24000000); // PLL em 24MHz
+		120000000); // PLL em 24MHz
 
 	ConfigSysTick(ui32SysClock);
 
