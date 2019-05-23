@@ -8,6 +8,7 @@
 
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
+#include "inc/tm4c1294ncpdt.h"
 
 extern uint32_t freqCarry;
 extern uint32_t freqMeasure;
