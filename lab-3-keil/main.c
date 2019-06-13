@@ -39,12 +39,12 @@ void app_main (void *argument) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0));
 	UARTConfigSetExpClk(UART0_BASE, SystemCoreClock, 57600, (UART_CONFIG_PAR_NONE | UART_CONFIG_STOP_ONE | UART_CONFIG_WLEN_8));
-	UARTFIFOLevelSet(UART0_BASE, UART_FIFO_TX1_8, UART_FIFO_RX1_8);
+//	UARTFIFOLevelSet(UART0_BASE, UART_FIFO_TX1_8, UART_FIFO_RX1_8);
 	UARTIntDisable(UART0_BASE, 0xFFFFFFFF);
 	UARTIntEnable(UART0_BASE, UART_INT_RX);
 	IntEnable(INT_UART0);
 	UARTEnable(UART0_BASE);
-//	UARTFIFOEnable(UART0_BASE);
+	UARTFIFODisable(UART0_BASE);
 	char buffer[10] = "Init\n\0";
 	uint8_t i = 0;
 	while(buffer[i] != '\0'){
