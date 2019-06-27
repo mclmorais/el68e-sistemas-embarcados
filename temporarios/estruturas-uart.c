@@ -30,6 +30,7 @@ typedef struct
 {
 	TipoSaida tipo;
 	char dados[2];
+	char elevador;
 } EventoSaida;
 
 typedef enum
