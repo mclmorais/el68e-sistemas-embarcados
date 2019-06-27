@@ -1,8 +1,3 @@
-typedef struct
-{
-	TipoEntrada tipo;
-	char dados[2];
-} EventoEntrada;
 
 typedef enum
 {
@@ -24,14 +19,13 @@ typedef enum
 	DESCIDA
 } DirecaoBotao;
 
-// ---------------------------
-
 typedef struct
 {
-	TipoSaida tipo;
+	TipoEntrada tipo;
 	char dados[2];
-	char elevador;
-} EventoSaida;
+} EventoEntrada;
+
+// ---------------------------
 
 typedef enum
 {
@@ -48,3 +42,10 @@ typedef enum
 	DESCE,
 	PARA
 } TipoMovimento;
+
+typedef struct
+{
+	TipoSaida tipo;
+	char dados[2];
+	char elevador;
+} EventoSaida;
