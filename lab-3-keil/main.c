@@ -19,37 +19,40 @@
 #include "driverlib/interrupt.h"
 
 osThreadId_t threadEncoderId, threadDecoderId;
-char buffer[10] = "Init\n\0";
  
- void UART0_Handler(void){
+void UART0_Handler(void){
 	 uint32_t ui32Status = UARTIntStatus(UART0_BASE, true);
 	 UARTIntClear(UART0_BASE, ui32Status);
 	 osThreadFlagsSet(threadDecoderId, 0x0001);
- }
+}
  
- void threadEncoder(void *arg){
+void sendString(char string[]){
+	for(uint8_t i = 0; i < strlen(string); i++){
+		UARTCharPut(UART0_BASE, string[i]);
+	}
+	UARTCharPut(UART0_BASE, '\r');
+}
+
+void threadEncoder(void *arg){
+	osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+	sendString("er");
+	osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+	sendString("ef");
+	osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+	sendString("es");
 	while(true){
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-		for(uint8_t i = 0; buffer[i] != '\0'; i++){
-			UARTCharPutNonBlocking(UART0_BASE, buffer[i]);
-		}
+		sendString("ep");
 	}
- }
+}
  
- void threadDecoder(void *arg){
-	 while(true){
-			osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-			uint8_t i;
-			for(i = 0; i<9; i++){
-				buffer[i] = UARTCharGet(UART0_BASE);
-				if(buffer[i] == '\r'){
-					break;
-				}		
-			}
-			buffer[++i] = '\0';
-			osThreadFlagsSet(threadEncoderId, 0x0001);
-	 }
- }
+void threadDecoder(void *arg){
+	while(true){
+		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+		while(UARTCharGet(UART0_BASE) != '\r');
+		osThreadFlagsSet(threadEncoderId, 0x0001);
+	}
+}
  
 /*----------------------------------------------------------------------------
  * Application main thread
@@ -68,10 +71,6 @@ void app_main (void *argument) {
 	UARTIntEnable(UART0_BASE, UART_INT_RX);
 	IntEnable(INT_UART0);
 	UARTEnable(UART0_BASE);
-	
-	for(uint8_t i = 0; buffer[i] != '\0'; i++){
-		UARTCharPut(UART0_BASE, buffer[i]);
-	}
 	
 	threadEncoderId = osThreadNew(threadEncoder, NULL, NULL);
 	threadDecoderId = osThreadNew(threadDecoder, NULL, NULL);
