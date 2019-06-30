@@ -47,9 +47,9 @@ typedef enum TipoMovimento
 	PARA
 } TipoMovimento;
 
-typedef struct
+typedef struct EventoSaida
 {
 	TipoSaida tipo;
-	char dados[2];
-	char elevador;
+	uint8_t dados[2];
+	uint8_t numeroElevador;
 } EventoSaida;

@@ -18,14 +18,15 @@
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "estruturas-uart.h"
+#include <string.h>
 
 #define NUMBER_OF_ELEVATORS 3
 
 osThreadId_t threadEncoderId, threadDecoderId, threadElevatorIds[NUMBER_OF_ELEVATORS];
 
-osMessageQueueId_t messageQueueElevatorIds[NUMBER_OF_ELEVATORS];
+osMessageQueueId_t messageQueueElevatorIds[NUMBER_OF_ELEVATORS], messageQueueOutputId;
 
-void decodificar(uint8_t* message)
+void decode(uint8_t* message)
 {
 	EventoEntrada evento;
 
@@ -96,16 +97,66 @@ void sendString(char string[])
 
 void threadEncoder(void *arg)
 {
-	osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-	sendString("er");
-	osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-	sendString("ef");
-	osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-	sendString("es");
+	EventoSaida evento;
+	uint8_t outputString[10];
+	osStatus_t status;
+
 	while(true)
 	{
-		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-		sendString("ep");
+//		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+		status = osMessageQueueGet(messageQueueOutputId, &evento, NULL, NULL);
+		if (status == osOK)
+		{
+
+			switch (evento.numeroElevador)
+			{
+			case 0:
+				outputString[0] = 'e';
+				break;
+			case 1:
+				outputString[0] = 'c';
+				break;
+			case 2:
+				outputString[0] = 'd';
+				break;
+			default:
+				break;
+			}
+
+			if(evento.tipo == MOVIMENTO)
+			{
+				switch (evento.dados[0])
+				{
+				case INICIALIZA:
+					outputString[1] = 'r';
+					break;
+				case ABRE_PORTAS:
+					outputString[1] = 'a';
+					break;
+				case FECHA_PORTAS:
+					outputString[1] = 'f';
+					break;
+				case SOBE:
+					outputString[1] = 's';
+					break;
+				case DESCE:
+					outputString[1] = 'd';
+					break;
+				case PARA:
+					outputString[1] = 'p';
+					break;
+				default:
+					break;
+				}
+				outputString[2] = CR;
+			}
+			else if (evento.tipo == LUZES)
+			{
+				// TODO
+			}
+
+			sendString((char*)outputString);
+		}
 	}
 }
 
@@ -117,21 +168,18 @@ void threadDecoder(void *arg)
 	while(true)
 	{
 		//osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-		if(UARTCharsAvail(UART0_BASE))
+		receivedChar = UARTCharGet(UART0_BASE);
+		if(receivedChar == LF)
 		{
-			receivedChar = UARTCharGetNonBlocking(UART0_BASE);
-			if(receivedChar == LF)
-			{
-				decodificar(buffer);
-				i = 0;
-				for(uint8_t j = 0; j < 20; j++)
-					buffer[j] = 0;
-			}
-			else
-			{
-				buffer[i] = receivedChar;
-				i = (i + 1) % 10;
-			}
+			decode(buffer);
+			i = 0;
+			for(uint8_t j = 0; j < 20; j++)
+				buffer[j] = 0;
+		}
+		else
+		{
+			buffer[i] = receivedChar;
+			i = (i + 1) % 10;
 		}
 	}
 }
@@ -139,15 +187,19 @@ void threadDecoder(void *arg)
 void threadElevator(void *arg)
 {
 	uint32_t elevatorNumber = ((uint32_t)arg);
-	int x = 0;
 	osStatus_t status;
 	EventoEntrada eventoRecebido;
+	EventoSaida saida;
+	saida.numeroElevador = elevatorNumber;
+	saida.tipo = MOVIMENTO;
+	saida.dados[0] = ABRE_PORTAS;
 	while(true)
 	{
-		status = osMessageQueueGet (messageQueueElevatorIds[elevatorNumber], &eventoRecebido, NULL, NULL);
+		status = osMessageQueueGet(messageQueueElevatorIds[elevatorNumber], &eventoRecebido, NULL, NULL);
 		if (status == osOK)
 		{
-			x = elevatorNumber;
+			osMessageQueuePut (messageQueueOutputId, &saida, 0, NULL);
+			osThreadFlagsSet(threadEncoderId, 0x0001);
 		}
 	}
 
@@ -180,6 +232,8 @@ void app_main (void *argument)
 		threadElevatorIds[i] = osThreadNew(threadElevator, (void*) i, NULL);
 		messageQueueElevatorIds[i] = osMessageQueueNew(10, sizeof(EventoEntrada), NULL);
 	}
+
+	messageQueueOutputId = osMessageQueueNew(10, sizeof(EventoSaida), NULL);
 
 	while(true)
 	{
