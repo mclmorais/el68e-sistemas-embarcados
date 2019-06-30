@@ -103,7 +103,7 @@ void threadEncoder(void *arg)
 
 	while(true)
 	{
-//		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		status = osMessageQueueGet(messageQueueOutputId, &evento, NULL, NULL);
 		if (status == osOK)
 		{
@@ -152,7 +152,18 @@ void threadEncoder(void *arg)
 			}
 			else if (evento.tipo == LUZES)
 			{
-				// TODO
+				switch (evento.dados[0])
+				{
+				case DESLIGA:
+					outputString[1] = 'D';
+					break;
+				case LIGA:
+					outputString[1] = 'L';
+					break;
+				default:
+					break;
+				}
+				outputString[2] = evento.dados[1] + 'a';
 			}
 
 			sendString((char*)outputString);
@@ -198,8 +209,15 @@ void threadElevator(void *arg)
 		status = osMessageQueueGet(messageQueueElevatorIds[elevatorNumber], &eventoRecebido, NULL, NULL);
 		if (status == osOK)
 		{
-			osMessageQueuePut (messageQueueOutputId, &saida, 0, NULL);
-			osThreadFlagsSet(threadEncoderId, 0x0001);
+			if(eventoRecebido.tipo == BOTAO_INTERNO)
+			{
+				saida.tipo = LUZES;
+				saida.dados[0] = LIGA;
+				saida.dados[1] = eventoRecebido.dados[0];
+				osMessageQueuePut (messageQueueOutputId, &saida, 0, NULL);
+				osThreadFlagsSet(threadEncoderId, 0x0001);
+
+			}
 		}
 	}
 

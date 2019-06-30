@@ -37,6 +37,12 @@ typedef enum TipoSaida
 	LUZES
 } TipoSaida;
 
+typedef enum TipoLuzes
+{
+	DESLIGA = 0,
+	LIGA
+} TipoLuzes;
+
 typedef enum TipoMovimento
 {
 	INICIALIZA = 0,
