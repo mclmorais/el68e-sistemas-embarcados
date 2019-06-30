@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Keil_v5/ARM/ARMCC/include/*"
+                "C:/Keil_v5/ARM/ARMCC/include/*",
+                "C:/Users/Marcelo/AppData/Local/Arm/Packs/Keil/TM4C_DFP/1.1.0/Device/Include/**",
+                "C:/Users/Marcelo/AppData/Local/Arm/Packs/ARM/CMSIS/5.5.1/CMSIS/RTOS2/Include"
             ],
             "defines": [
                 "_DEBUG",
