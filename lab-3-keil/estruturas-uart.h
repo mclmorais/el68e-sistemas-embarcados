@@ -1,12 +1,9 @@
-<< << << < HEAD
-        ====== =
 #include <stdint.h>
-	>> >> >> > 02 9f 9631a9fc30b355dad7f90f4c49e166fe72b2
 
 #define CR 0x0D
 #define LF 0x0A
 
-	typedef enum TipoEntrada
+typedef enum TipoEntrada
 {
 	PASSOU_POR_ANDAR = 0,
 	BOTAO_INTERNO,
@@ -34,13 +31,17 @@ typedef struct
 
 // ---------------------------
 
-// ---------------------------
-
 typedef enum TipoSaida
 {
 	MOVIMENTO = 0,
 	LUZES
 } TipoSaida;
+
+typedef enum TipoLuzes
+{
+	DESLIGA = 0,
+	LIGA
+} TipoLuzes;
 
 typedef enum TipoMovimento
 {
@@ -52,12 +53,9 @@ typedef enum TipoMovimento
 	PARA
 } TipoMovimento;
 
-typedef struct
+typedef struct EventoSaida
 {
 	TipoSaida tipo;
-	char dados[2];
-	char elevador;
-	<< << << < HEAD
+	uint8_t dados[2];
+	uint8_t numeroElevador;
 } EventoSaida;
-====== =
-	>> >> >> > 02 9f 9631a9fc30b355dad7f90f4c49e166fe72b2
