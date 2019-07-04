@@ -4,21 +4,21 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "driverlib/uart.h"
+#include "inc/hw_memmap.h"
 #include <stdio.h>
 #include <string.h>
 #include "RTE_Components.h"
 #include "system_TM4C129.h"
 #include "cmsis_os2.h"
 #include "inc/tm4c1294ncpdt.h"
-#include "inc/hw_memmap.h"
 #include "driverlib/pin_map.h"
-#include "driverlib/uart.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/rom.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
-#include "estruturas-uart.h"
 #include <string.h>
+#include "estruturas-uart.h"
 
 #define NUMBER_OF_ELEVATORS 3
 
@@ -178,20 +178,23 @@ void threadDecoder(void *arg)
 	uint8_t receivedChar = 0;
 	while(true)
 	{
-		//osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
-		receivedChar = UARTCharGet(UART0_BASE);
-		if(receivedChar == LF)
+		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+
+		do
 		{
-			decode(buffer);
-			i = 0;
-			for(uint8_t j = 0; j < 20; j++)
-				buffer[j] = 0;
-		}
-		else
-		{
+			receivedChar = UARTCharGet(UART0_BASE);
 			buffer[i] = receivedChar;
 			i = (i + 1) % 10;
-		}
+		} while (receivedChar != '\n');
+
+		while(UARTCharsAvail(UART0_BASE)) UARTCharGet(UART0_BASE);
+
+		decode(buffer);
+
+		i = 0;
+		memset(buffer, 0, 20);
+
+		osThreadYield();
 	}
 }
 
@@ -216,7 +219,6 @@ void threadElevator(void *arg)
 				saida.dados[1] = eventoRecebido.dados[0];
 				osMessageQueuePut (messageQueueOutputId, &saida, 0, NULL);
 				osThreadFlagsSet(threadEncoderId, 0x0001);
-
 			}
 		}
 	}
