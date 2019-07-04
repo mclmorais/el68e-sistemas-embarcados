@@ -193,8 +193,6 @@ void threadDecoder(void *arg)
 
 		i = 0;
 		memset(buffer, 0, 20);
-
-		osThreadYield();
 	}
 }
 
@@ -245,7 +243,9 @@ void app_main (void *argument)
 	UARTEnable(UART0_BASE);
 
 	threadEncoderId = osThreadNew(threadEncoder, NULL, NULL);
+	osThreadSetPriority(threadEncoderId, osPriorityRealtime7);
 	threadDecoderId = osThreadNew(threadDecoder, NULL, NULL);
+	osThreadSetPriority(threadDecoderId, osPriorityRealtime7);
 
 	for(uint8_t i = 0; i < NUMBER_OF_ELEVATORS; i++)
 	{
