@@ -1,0 +1,6 @@
+#ifndef __ELEVATOR_CONSTANTS_H__
+#define __ELEVATOR_CONSTANTS_H__
+
+#define NUMBER_OF_ELEVATORS 3
+
+#endif

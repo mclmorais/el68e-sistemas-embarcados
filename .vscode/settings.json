@@ -1,3 +1,9 @@
 {
-  "C_Cpp.formatting": "Disabled"
+  "C_Cpp.formatting": "Disabled",
+  "files.associations": {
+    "estruturas-uart.h": "c",
+    "string_utils.h": "c",
+    "elevator_constants.h": "c",
+    "encoding.h": "c"
+  }
 }

@@ -1,3 +1,5 @@
+#ifndef __ESTRUTURAS_UART_H__
+#define __ESTRUTURAS_UART_H__
 #include <stdint.h>
 
 #define CR 0x0D
@@ -59,3 +61,5 @@ typedef struct EventoSaida
 	uint8_t dados[2];
 	uint8_t numeroElevador;
 } EventoSaida;
+
+#endif

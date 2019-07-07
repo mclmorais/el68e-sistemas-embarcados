@@ -1,3 +1,6 @@
+#ifndef __ESTRUTURAS_ELEVADOR_H__
+#define __ESTRUTURAS_ELEVADOR_H__
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -17,11 +20,13 @@ typedef enum EstadoElevador
 typedef struct StructElevador
 {
 	EstadoElevador estadoAtual;
-  EstadoElevador estadoAnterior;
-  uint8_t andarAtual;
-  uint8_t andarAlvo;
+	EstadoElevador estadoAnterior;
+	uint8_t andarAtual;
+	uint8_t andarAlvo;
 	uint16_t pendentesSubida;
 	uint16_t pendentesDescida;
-  uint16_t pendentesInterno;
+	uint16_t pendentesInterno;
 	bool mensagemEnviada;
 } StructElevador;
+
+#endif
