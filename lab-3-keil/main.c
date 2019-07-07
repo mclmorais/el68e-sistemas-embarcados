@@ -343,30 +343,15 @@ void threadElevator(void *arg)
 				}
 				if(elevador.pendentesDescida != 0 | elevador.pendentesSubida != 0 | elevador.pendentesInterno != 0)
 				{	
-					if(elevador.estadoAnterior == PRONTO && avaliaSubida(elevador) != -1)
+					if(avaliaSubida(elevador) != -1)
 					{
 						elevador.andarAlvo = avaliaSubida(elevador);
-						elevador.estadoAnterior = PRONTO;
 						elevador.estadoAtual = FECHANDO_PORTAS;
 						elevador.mensagemEnviada = false;
 					}
-					else if(elevador.estadoAnterior == PRONTO && avaliaDescida(elevador) != -1)
+					else if(avaliaDescida(elevador) != -1)
 					{
 						elevador.andarAlvo = avaliaDescida(elevador);
-						elevador.estadoAnterior = PRONTO;
-						elevador.estadoAtual = FECHANDO_PORTAS;
-						elevador.mensagemEnviada = false;
-					}
-					else if(elevador.estadoAnterior == SUBINDO && avaliaSubida(elevador) != -1){
-						elevador.andarAlvo = avaliaSubida(elevador);
-						elevador.estadoAnterior = SUBINDO;
-						elevador.estadoAtual = FECHANDO_PORTAS;
-						elevador.mensagemEnviada = false;
-					}
-					else if(elevador.estadoAnterior == DESCENDO && avaliaDescida(elevador) != -1)
-					{
-						elevador.andarAlvo = avaliaDescida(elevador);
-						elevador.estadoAnterior = DESCENDO;
 						elevador.estadoAtual = FECHANDO_PORTAS;
 						elevador.mensagemEnviada = false;
 					}
