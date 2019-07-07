@@ -202,7 +202,7 @@ int avaliaSubida(StructElevador elevador)
 {
 	int andar_externo = -1;
 	int andar_interno = -1;
-	if(elevador.estadoAnterior != PRONTO){
+	if(elevador.estadoAnterior != PRONTO || elevador.estadoAtual == SUBINDO){
 		if(((elevador.pendentesSubida >> (elevador.andarAtual + 1)) << (elevador.andarAtual + 1)) > (0xFFFF >> (15 - elevador.andarAtual)))
 		{ 
 			uint16_t aux_externo = ((elevador.pendentesSubida >> (elevador.andarAtual + 1)) << (elevador.andarAtual + 1));
@@ -231,7 +231,7 @@ int avaliaDescida(StructElevador elevador)
 {
 	int andar_externo = -1;
 	int andar_interno = -1;
-	if(elevador.estadoAnterior != PRONTO){
+	if(elevador.estadoAnterior != PRONTO || elevador.estadoAtual == DESCENDO){
 		if(((elevador.pendentesDescida << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual)) < (0xFFFF >> (15 - elevador.andarAtual)) && elevador.pendentesDescida != 0)
 		{
 			uint16_t aux_externo = ((elevador.pendentesDescida << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual));
