@@ -202,9 +202,16 @@ int avaliaSubida(StructElevador elevador)
 {
 	int andar_externo = -1;
 	int andar_interno = -1;
-	if(((elevador.pendentesSubida >> (elevador.andarAtual + 1)) << (elevador.andarAtual + 1)) > (0xFFFF >> (15 - elevador.andarAtual)))
-	{ 
-		uint16_t aux_externo = ((elevador.pendentesSubida >> (elevador.andarAtual + 1)) << (elevador.andarAtual + 1));
+	if(elevador.estadoAnterior != PRONTO){
+		if(((elevador.pendentesSubida >> (elevador.andarAtual + 1)) << (elevador.andarAtual + 1)) > (0xFFFF >> (15 - elevador.andarAtual)))
+		{ 
+			uint16_t aux_externo = ((elevador.pendentesSubida >> (elevador.andarAtual + 1)) << (elevador.andarAtual + 1));
+			aux_externo &= -aux_externo;
+			andar_externo = log2(aux_externo);
+		}
+	}
+	else if(elevador.pendentesSubida != 0){
+		uint16_t aux_externo = elevador.pendentesSubida;
 		aux_externo &= -aux_externo;
 		andar_externo = log2(aux_externo);
 	}
@@ -217,20 +224,27 @@ int avaliaSubida(StructElevador elevador)
 	if(andar_externo == -1 && andar_interno == -1) return -1;
 	else if(andar_externo != -1 && andar_interno == -1) return andar_externo;
 	else if(andar_externo == -1 && andar_interno != -1) return andar_interno;
-	else return (andar_externo >= andar_interno ? andar_interno : andar_externo);
+	else return (andar_externo > andar_interno ? andar_interno : andar_externo);
 }
 
 int avaliaDescida(StructElevador elevador)
 {
 	int andar_externo = -1;
 	int andar_interno = -1;
-	if(((elevador.pendentesDescida << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual)) < (0xFFFF >> (16 - elevador.andarAtual)))
-	{
-		uint16_t aux_externo = ((elevador.pendentesDescida << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual));
-		aux_externo = 1 << (int)log2(aux_externo);
+	if(elevador.estadoAnterior != PRONTO){
+		if(((elevador.pendentesDescida << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual)) < (0xFFFF >> (15 - elevador.andarAtual)) && elevador.pendentesDescida != 0)
+		{
+			uint16_t aux_externo = ((elevador.pendentesDescida << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual));
+			aux_externo = 1 << (int)log2(aux_externo);
+			andar_externo = log2(aux_externo);
+		}
+	}
+	else if(elevador.pendentesDescida != 0){
+		uint16_t aux_externo = elevador.pendentesDescida;
+		aux_externo &= -aux_externo;
 		andar_externo = log2(aux_externo);
 	}
-	else if(((elevador.pendentesInterno << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual)) < (0xFFFF >> (16 - elevador.andarAtual)))
+	if(((elevador.pendentesInterno << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual)) < (0xFFFF >> (15 - elevador.andarAtual)) && elevador.pendentesInterno != 0)
 	{
 		uint16_t aux_interno = ((elevador.pendentesInterno << (16 - elevador.andarAtual)) >> (16 - elevador.andarAtual));
 		aux_interno = 1 << (int)log2(aux_interno);
@@ -239,7 +253,7 @@ int avaliaDescida(StructElevador elevador)
 	if(andar_externo == -1 && andar_interno == -1) return -1;
 	else if(andar_externo != -1 && andar_interno == -1) return andar_externo;
 	else if(andar_externo == -1 && andar_interno != -1) return andar_interno;
-	else return (andar_externo <= andar_interno ? andar_interno : andar_externo);
+	else return (andar_externo > andar_interno ? andar_externo : andar_interno);
 }
 
 void threadElevator(void *arg)
@@ -249,6 +263,9 @@ void threadElevator(void *arg)
 	elevador.estadoAtual = INICIALIZANDO;
 	elevador.estadoAnterior = INICIALIZANDO;
 	elevador.mensagemEnviada = false;
+	elevador.pendentesSubida = 0;
+	elevador.pendentesDescida = 0;
+	elevador.pendentesInterno = 0;
 	osStatus_t status;
 	EventoEntrada eventoRecebido;
 	EventoSaida eventoSaida;
@@ -260,7 +277,7 @@ void threadElevator(void *arg)
 		{
 			if(eventoRecebido.tipo == BOTAO_EXTERNO)
 			{
-				if(eventoRecebido.dados[1] != elevador.andarAtual)
+				if(eventoRecebido.dados[1] != elevador.andarAtual && eventoRecebido.dados[1] != elevador.andarAlvo)
 				{
 					if(eventoRecebido.dados[0] == SUBIDA)
 					{
@@ -274,7 +291,7 @@ void threadElevator(void *arg)
 			}
 			else if(eventoRecebido.tipo == BOTAO_INTERNO)
 			{
-				if(eventoRecebido.dados[0] != elevador.andarAtual)
+				if(eventoRecebido.dados[0] != elevador.andarAtual && eventoRecebido.dados[0] != elevador.andarAlvo)
 				{
 					elevador.pendentesInterno |= (1 << eventoRecebido.dados[0]);
 					eventoSaida.tipo = LUZES;
@@ -320,7 +337,7 @@ void threadElevator(void *arg)
 				{
 					elevador.estadoAnterior = PRONTO;
 				}
-				if(avaliaDescida(elevador) == -1 && elevador.estadoAnterior == DESCIDA)
+				else if(avaliaDescida(elevador) == -1 && elevador.estadoAnterior == DESCENDO)
 				{
 					elevador.estadoAnterior = PRONTO;
 				}
@@ -350,6 +367,17 @@ void threadElevator(void *arg)
 					{
 						elevador.andarAlvo = avaliaDescida(elevador);
 						elevador.estadoAnterior = DESCENDO;
+						elevador.estadoAtual = FECHANDO_PORTAS;
+						elevador.mensagemEnviada = false;
+					}
+				}
+				else
+				{
+					tickFinal = osKernelGetTickCount();
+					if((tickFinal - tickInicial) > 5000 && elevador.andarAtual != 0)
+					{
+						elevador.andarAlvo = 0;
+						elevador.estadoAnterior = PRONTO;
 						elevador.estadoAtual = FECHANDO_PORTAS;
 						elevador.mensagemEnviada = false;
 					}
@@ -389,7 +417,7 @@ void threadElevator(void *arg)
 					elevador.mensagemEnviada = true;
 					osThreadFlagsSet(threadEncoderId, 0x0001);
 				}
-				else if(avaliaDescida(elevador) > elevador.andarAlvo && avaliaSubida(elevador) != -1)
+				else if(avaliaDescida(elevador) > elevador.andarAlvo && avaliaDescida(elevador) != -1)
 				{
 					elevador.andarAlvo = avaliaDescida(elevador);
 				}
@@ -402,6 +430,7 @@ void threadElevator(void *arg)
 					osThreadFlagsSet(threadEncoderId, 0x0001);
 					elevador.estadoAnterior = DESCENDO;
 					elevador.estadoAtual = ABRINDO_PORTAS;
+					elevador.pendentesSubida &= ~(1 << elevador.andarAlvo);
 					elevador.pendentesDescida &= ~(1 << elevador.andarAlvo);
 					elevador.pendentesInterno &= ~(1 << elevador.andarAlvo);
 					eventoSaida.tipo = LUZES;
@@ -409,8 +438,8 @@ void threadElevator(void *arg)
 					eventoSaida.dados[0] = DESLIGA;
 					eventoSaida.dados[1] = elevador.andarAtual;
 					osMessageQueuePut(messageQueueOutputId, &eventoSaida, 0, NULL);
-					osThreadFlagsSet(threadEncoderId, 0x0001);
 					elevador.mensagemEnviada = false;
+					osThreadFlagsSet(threadEncoderId, 0x0001);
 				}
 				break;
 			case SUBINDO:
@@ -437,14 +466,15 @@ void threadElevator(void *arg)
 					elevador.estadoAnterior = SUBINDO;
 					elevador.estadoAtual = ABRINDO_PORTAS;
 					elevador.pendentesSubida &= ~(1 << elevador.andarAlvo);
+					elevador.pendentesDescida &= ~(1 << elevador.andarAlvo);
 					elevador.pendentesInterno &= ~(1 << elevador.andarAlvo);
 					eventoSaida.tipo = LUZES;
 					eventoSaida.numeroElevador = elevatorNumber;
 					eventoSaida.dados[0] = DESLIGA;
 					eventoSaida.dados[1] = elevador.andarAtual;
 					osMessageQueuePut(messageQueueOutputId, &eventoSaida, 0, NULL);
-					osThreadFlagsSet(threadEncoderId, 0x0001);
 					elevador.mensagemEnviada = false;
+					osThreadFlagsSet(threadEncoderId, 0x0001);
 				}
 				break;
 			case ABRINDO_PORTAS:
@@ -469,7 +499,7 @@ void threadElevator(void *arg)
 				if((tickFinal - tickInicial) > 1000)
 				{
 					elevador.estadoAtual = PRONTO;
-					elevador.mensagemEnviada = false;
+					tickInicial = osKernelGetTickCount();
 				}
 				break;
 			default:
